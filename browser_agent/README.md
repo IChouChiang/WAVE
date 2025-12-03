@@ -1,6 +1,6 @@
 # Browser Agent
 
-This directory contains scripts for browser automation using Playwright with stealth capabilities.
+This directory contains scripts for browser automation using Playwright with stealth capabilities, specifically tailored for Xiaohongshu (XHS) data extraction.
 
 ## Setup
 
@@ -17,73 +17,69 @@ This directory contains scripts for browser automation using Playwright with ste
     playwright install chromium
     ```
 
+## Project Structure
+
+The project has been refactored into a modular architecture for better maintainability and reusability.
+
+*   **`browser_utils.py`**: 
+    *   Handles browser initialization.
+    *   Manages persistent contexts (cookies, login sessions).
+    *   Applies stealth techniques (removing `navigator.webdriver`, custom user agent args).
+*   **`xhs_actions.py`**: 
+    *   Contains the core business logic for Xiaohongshu interactions.
+    *   `search_xhs(page, query)`: robust search with input clearing.
+    *   `extract_search_results(page)`: scrapes search result titles and likes.
+    *   `extract_post_details(page)`: scrapes deep details including full text, tags, stats, and comments.
+    *   `close_post_details(page)`: handles modal navigation.
+*   **`xhs_search_test.py`**: 
+    *   The main orchestration script that ties everything together.
+    *   Demonstrates a complete workflow: Launch -> Search -> Extract List -> Click Post -> Extract Details -> Close -> Next Post.
+*   **`bot_test.py`**: 
+    *   A utility script to verify stealth capabilities against bot detection sites.
+
 ## Usage
 
-### Run the Script
-The script now launches its own browser instance with specific flags to avoid detection. You do **not** need to launch Chrome manually anymore.
-
-```powershell
-python bot_test.py
-```
-
-### Run XHS Search Test
-Executes the search and extraction workflow on Xiaohongshu.
+### Run XHS Search & Extraction
+This is the main entry point for the XHS automation workflow.
 
 ```powershell
 python xhs_search_test.py
 ```
 
-## Success Status (Verified 2025-12-03)
-The script successfully passes bot detection checks on `https://bot.sannysoft.com/`.
+**Workflow:**
+1.  Launches a persistent Chrome instance (you will stay logged in across runs).
+2.  Navigates to Xiaohongshu.
+3.  Searches for "AI Agent".
+4.  Extracts the top search results to the console.
+5.  Opens the 3rd post, extracts full details (including comments), and closes it.
+6.  Opens the 4th post, extracts full details, and closes it.
+7.  **Pauses** and waits for you to press `Enter` in the terminal to exit. This allows you to inspect the browser state.
 
-### Implemented Method
-1.  **Launch Arguments**: 
-    -   `headless=False`: Running in a visible window is less suspicious than headless mode.
-    -   `--disable-blink-features=AutomationControlled`: This critical flag removes the "Chrome is being controlled by automated test software" infobar and internal flags.
-2.  **Persistent Context**:
-    -   Uses `launch_persistent_context` with a local user data directory (`./chrome_user_data`).
-    -   This maintains cookies, cache, and local storage across sessions, simulating a real user profile.
-3.  **Script Injection**: 
-    -   We use `page.add_init_script` to manually delete and override `navigator.webdriver` before the page loads.
-    -   This prevents the site from detecting the standard Selenium/Playwright property.
+### Run Bot Detection Test
+Verifies that the browser configuration is not detected as a bot.
 
-## Features
--   **Stealth Mode**: 
-    -   Uses `--disable-blink-features=AutomationControlled` flag.
-    -   Manually patches `navigator.webdriver` and other properties.
--   **Headed Mode**: Runs in a visible window (`headless=False`).
--   **Persistent Profile**: Saves login state and cookies to `./chrome_user_data`.
--   **Fixed Viewport**: Configured to 1440x900 to ensure consistent rendering across tabs.
--   **Bot Detection Test**: Navigates to `https://bot.sannysoft.com/` to verify stealth effectiveness.
+```powershell
+python bot_test.py
+```
 
-### XHS Search & Extraction (`xhs_search_test.py`)
-A specialized script for interacting with Xiaohongshu (Little Red Book).
+## Key Features
 
-**Features:**
-1.  **Robust Search**:
-    -   Handles input clearing (detects and clicks the "x" icon).
-    -   Uses `Enter` key submission for better reliability.
-    -   Waits for results using selector-based timeouts rather than strict network idle states.
-2.  **Result List Extraction**:
-    -   Extracts top 15 search results.
-    -   Parses Title and Like counts into a Markdown table.
-3.  **Detail View Extraction**:
-    -   Clicks into specific posts (e.g., the 3rd result).
-    -   **Basic Info**: Title, Author, Date/Location.
-    -   **Content**: Full post text.
-    -   **Tags**: Extracts hashtags (filtering out non-tag elements).
-    -   **Stats**: Likes, Collections, Comments.
-    -   **Comments**: Extracts top 5 parent comments and their first replies, including author, date, location, and like counts (normalizing "赞" to "0").
-4.  **Scoped Selectors**:
-    -   All extractions are scoped to `#noteContainer` to avoid interference from the background feed.
+### 1. Stealth Mode
+-   **`--disable-blink-features=AutomationControlled`**: Removes the "controlled by automation" flag.
+-   **`navigator.webdriver` Override**: Manually deletes the webdriver property via script injection.
+-   **Persistent Context**: Uses `./chrome_user_data` to save your login session. You only need to scan the QR code once.
 
-### Scripts
--   **`bot_test.py`**: Verifies stealth capabilities against bot detection sites.
--   **`xhs_search_test.py`**: 
-    -   Performs search operations on Xiaohongshu.
-    -   Handles clearing existing search text (detects and clicks the close icon).
-    -   **Extracts Results**: Scrapes the top 15 posts (Title and Like Count) and outputs them as a Markdown table.
-    -   Keeps the browser open for manual monitoring (Press Ctrl+C to exit).
+### 2. Robust Extraction
+-   **Scoped Selectors**: Uses specific container IDs (e.g., `#noteContainer`) to avoid scraping unrelated text from the background feed.
+-   **Data Normalization**: Automatically converts "赞" (Chinese for "Like") to "0" for consistent integer parsing.
+-   **Comment Scraping**: Extracts parent comments and their top replies, handling "0 comments" cases gracefully.
 
-## 📝 Todo
--   [ ] Make viewport size flexible/responsive to fit the user's actual screen resolution automatically.
+### 3. Navigation Logic
+-   **Modal Handling**: Smartly detects the close button or uses the `Escape` key to return to the feed.
+-   **Input Clearing**: Checks for and clicks the "clear text" icon before typing new search queries.
+
+## Developer Notes
+
+-   **Modifying the Workflow**: Edit `xhs_search_test.py` to change search queries or the number of posts to scrape.
+-   **Adding Actions**: Add new interaction functions to `xhs_actions.py` (e.g., `like_post`, `collect_post`).
+-   **Browser Profile**: If you encounter issues, try deleting the `chrome_user_data` folder to reset the browser profile.
