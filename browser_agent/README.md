@@ -49,5 +49,13 @@ The script successfully passes bot detection checks on `https://bot.sannysoft.co
 -   **Fixed Viewport**: Configured to 1440x900 to ensure consistent rendering across tabs.
 -   **Bot Detection Test**: Navigates to `https://bot.sannysoft.com/` to verify stealth effectiveness.
 
+### Scripts
+-   **`bot_test.py`**: Verifies stealth capabilities against bot detection sites.
+-   **`xhs_search_test.py`**: 
+    -   Performs search operations on Xiaohongshu.
+    -   Handles clearing existing search text (detects and clicks the close icon).
+    -   **Extracts Results**: Scrapes the top 15 posts (Title and Like Count) and outputs them as a Markdown table.
+    -   Keeps the browser open for manual monitoring (Press Ctrl+C to exit).
+
 ## 📝 Todo
 -   [ ] Make viewport size flexible/responsive to fit the user's actual screen resolution automatically.
