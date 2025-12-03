@@ -39,6 +39,7 @@ __pycache__/
 .venv
 venv/
 env/
+chrome_user_data/
 
 # vercel
 .vercel
