@@ -46,4 +46,8 @@ The script successfully passes bot detection checks on `https://bot.sannysoft.co
     -   Manually patches `navigator.webdriver` and other properties.
 -   **Headed Mode**: Runs in a visible window (`headless=False`).
 -   **Persistent Profile**: Saves login state and cookies to `./chrome_user_data`.
+-   **Fixed Viewport**: Configured to 1440x900 to ensure consistent rendering across tabs.
 -   **Bot Detection Test**: Navigates to `https://bot.sannysoft.com/` to verify stealth effectiveness.
+
+## 📝 Todo
+-   [ ] Make viewport size flexible/responsive to fit the user's actual screen resolution automatically.

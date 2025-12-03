@@ -1,6 +1,9 @@
 import time
 from playwright.sync_api import sync_playwright
 
+MAX_WIDTH = 1440
+MAX_HEIGHT = 900
+
 def main():
     print("Starting Playwright script...")
     
@@ -15,11 +18,19 @@ def main():
                 headless=False,
                 args=[
                     "--disable-blink-features=AutomationControlled", 
-                ]
+                    "--start-maximized",
+                ],
+                # Set the viewport for the entire context (all pages/tabs)
+                # This ensures new tabs inherit this size instead of reverting to default.
+                # Note: 'no_viewport=True' (or viewport=None) allows the page to fill the window,
+                # but if you want a specific fixed resolution, set it here.
+                viewport={"width": MAX_WIDTH, "height": MAX_HEIGHT},
             )
             
             # Get the default page
             page = context.pages[0] if context.pages else context.new_page()
+
+            # page.set_viewport_size(...) is no longer needed as it's set globally above
             
             # Apply manual stealth settings via init scripts
             print("Applying manual stealth settings...")
