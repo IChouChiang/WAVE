@@ -46,6 +46,82 @@ def search_xhs(page: Page, query: str):
     except:
         print("Warning: Timeout waiting for results")
 
+def apply_search_filters(page: Page, filters: dict):
+    """
+    Applies search filters by interacting with the filter dropdown.
+    
+    Args:
+        page (Page): The Playwright page object.
+        filters (dict): A dictionary of filters to apply.
+                        Key: Category name. Supported categories and options:
+                             - "排序依据": "综合", "最新", "最多点赞", "最多评论", "最多收藏"
+                             - "笔记类型": "不限", "视频", "图文"
+                             - "发布时间": "不限", "一天内", "一周内", "半年内"
+                             - "搜索范围": "不限", "已看过", "未看过", "已关注"
+                             - "位置距离": "不限", "同城", "附近"
+                        Value: Option name (e.g., "最新", "视频", "未看过")
+    """
+    print(f"Applying filters: {filters}")
+    
+    # Selector for the filter dropdown button
+    filter_btn_selector = ".search-layout__top clientonly > div > span"
+    
+    for category, option in filters.items():
+        print(f"Setting '{category}' to '{option}'...")
+        
+        try:
+            # 1. Open the dropdown if not visible
+            if not page.locator(".filters-wrapper").is_visible():
+                print("Opening filter dropdown...")
+                # Try to find the button. If the specific selector fails, try a broader one or handle error.
+                btn = page.locator(filter_btn_selector)
+                if not btn.is_visible():
+                     # Fallback: sometimes the structure might be slightly different or it's just ".filter-box"
+                     # But based on user input, we stick to the structure.
+                     pass
+                btn.click()
+                page.wait_for_selector(".filters-wrapper", timeout=3000)
+            
+            # 2. Find the category row
+            filter_rows = page.locator(".filters-wrapper .filters").all()
+            target_row = None
+            
+            for row in filter_rows:
+                # The first span in the row is usually the category title
+                cat_span = row.locator("span").first
+                if cat_span.is_visible() and category in cat_span.inner_text():
+                    target_row = row
+                    break
+            
+            if not target_row:
+                print(f"Category '{category}' not found.")
+                continue
+                
+            # 3. Find and click the option
+            option_clicked = False
+            tags = target_row.locator(".tags").all()
+            for tag in tags:
+                if tag.inner_text().strip() == option:
+                    # Check if already active
+                    class_attr = tag.get_attribute("class") or ""
+                    if "active" in class_attr:
+                        print(f"Option '{option}' is already active.")
+                        option_clicked = True
+                    else:
+                        tag.click()
+                        print(f"Clicked option '{option}'.")
+                        option_clicked = True
+                        # Wait for reload/update. 
+                        # Note: Clicking a filter often triggers a reload which might close the dropdown.
+                        time.sleep(2) 
+                    break
+            
+            if not option_clicked:
+                print(f"Option '{option}' not found in category '{category}'.")
+                
+        except Exception as e:
+            print(f"Error applying filter {category}={option}: {e}")
+
 def extract_search_results(page: Page, max_results: int = 15):
     """
     Extracts the top N search results (Title and Likes) and prints a Markdown table.

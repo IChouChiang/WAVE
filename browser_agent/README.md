@@ -31,11 +31,12 @@ The project has been refactored into a modular architecture for better maintaina
     *   `extract_search_results(page)`: scrapes search result titles and likes.
     *   `extract_post_details(page)`: scrapes deep details including full text, tags, stats, and comments.
     *   `close_post_details(page)`: handles modal navigation.
-*   **`xhs_search_test.py`**: 
-    *   The main orchestration script that ties everything together.
-    *   Demonstrates a complete workflow: Launch -> Search -> Extract List -> Click Post -> Extract Details -> Close -> Next Post.
-*   **`bot_test.py`**: 
-    *   A utility script to verify stealth capabilities against bot detection sites.
+    *   `apply_search_filters(page, filters)`: applies search filters (Sort, Type, Time, Scope, Location).
+*   **`tests/`**:
+    *   **`xhs_search_test.py`**: Main orchestration script. Launch -> Search -> Extract List -> Click Post -> Extract Details -> Close -> Next Post.
+    *   **`xhs_filter_test.py`**: Verifies search filter functionality (Sort, Type, Time, Scope, Location).
+    *   **`xhs_debug_filter.py`**: Utility to freeze the page for inspecting dynamic filter components.
+    *   **`bot_test.py`**: Verifies stealth capabilities against bot detection sites.
 
 ## Usage
 
@@ -43,7 +44,7 @@ The project has been refactored into a modular architecture for better maintaina
 This is the main entry point for the XHS automation workflow.
 
 ```powershell
-python xhs_search_test.py
+python browser_agent/tests/xhs_search_test.py
 ```
 
 **Workflow:**
@@ -55,11 +56,18 @@ python xhs_search_test.py
 6.  Opens the 4th post, extracts full details, and closes it.
 7.  **Pauses** and waits for you to press `Enter` in the terminal to exit. This allows you to inspect the browser state.
 
+### Run Filter Test
+Verifies that search filters work correctly.
+
+```powershell
+python browser_agent/tests/xhs_filter_test.py
+```
+
 ### Run Bot Detection Test
 Verifies that the browser configuration is not detected as a bot.
 
 ```powershell
-python bot_test.py
+python browser_agent/tests/bot_test.py
 ```
 
 ## Key Features
@@ -77,9 +85,10 @@ python bot_test.py
 ### 3. Navigation Logic
 -   **Modal Handling**: Smartly detects the close button or uses the `Escape` key to return to the feed.
 -   **Input Clearing**: Checks for and clicks the "clear text" icon before typing new search queries.
+-   **Filter Application**: Supports applying multiple filters (Sort, Type, Time, Scope, Location) via the `apply_search_filters` function.
 
 ## Developer Notes
 
--   **Modifying the Workflow**: Edit `xhs_search_test.py` to change search queries or the number of posts to scrape.
+-   **Modifying the Workflow**: Edit scripts in `tests/` to change search queries or the number of posts to scrape.
 -   **Adding Actions**: Add new interaction functions to `xhs_actions.py` (e.g., `like_post`, `collect_post`).
 -   **Browser Profile**: If you encounter issues, try deleting the `chrome_user_data` folder to reset the browser profile.

@@ -1,5 +1,17 @@
+"""
+Bot Detection Verification Script
+
+This script launches the browser with the configured stealth settings and navigates 
+to https://bot.sannysoft.com/ to verify that the automation is not detected as a bot.
+"""
+import sys
+import os
 import time
 from playwright.sync_api import sync_playwright
+
+# Add parent directory to path to import modules
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from browser_utils import launch_persistent_browser
 
 def main():

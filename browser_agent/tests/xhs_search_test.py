@@ -1,5 +1,20 @@
+"""
+XHS Search & Extraction Test Script
+
+This script demonstrates the core workflow of the browser agent:
+1. Launches a persistent browser session.
+2. Performs searches on Xiaohongshu.
+3. Extracts search results (titles and likes).
+4. Navigates to specific posts, extracts detailed content (text, tags, stats, comments), and closes the modal.
+"""
+import sys
+import os
 import time
 from playwright.sync_api import sync_playwright
+
+# Add parent directory to path to import modules
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from browser_utils import launch_persistent_browser
 from xhs_actions import search_xhs, extract_search_results, extract_post_details, close_post_details
 
