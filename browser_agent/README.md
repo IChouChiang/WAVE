@@ -33,7 +33,10 @@ The script successfully passes bot detection checks on `https://bot.sannysoft.co
 1.  **Launch Arguments**: 
     -   `headless=False`: Running in a visible window is less suspicious than headless mode.
     -   `--disable-blink-features=AutomationControlled`: This critical flag removes the "Chrome is being controlled by automated test software" infobar and internal flags.
-2.  **Script Injection**: 
+2.  **Persistent Context**:
+    -   Uses `launch_persistent_context` with a local user data directory (`./chrome_user_data`).
+    -   This maintains cookies, cache, and local storage across sessions, simulating a real user profile.
+3.  **Script Injection**: 
     -   We use `page.add_init_script` to manually delete and override `navigator.webdriver` before the page loads.
     -   This prevents the site from detecting the standard Selenium/Playwright property.
 
@@ -42,4 +45,5 @@ The script successfully passes bot detection checks on `https://bot.sannysoft.co
     -   Uses `--disable-blink-features=AutomationControlled` flag.
     -   Manually patches `navigator.webdriver` and other properties.
 -   **Headed Mode**: Runs in a visible window (`headless=False`).
+-   **Persistent Profile**: Saves login state and cookies to `./chrome_user_data`.
 -   **Bot Detection Test**: Navigates to `https://bot.sannysoft.com/` to verify stealth effectiveness.

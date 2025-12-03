@@ -6,18 +6,20 @@ def main():
     
     with sync_playwright() as p:
         try:
-            # Launch a new browser instance with stealth flags
-            # We use launch() instead of connect_over_cdp() to ensure flags are applied correctly
-            print("Launching browser with stealth flags...")
-            browser = p.chromium.launch(
+            # Launch a persistent browser context (normal window, not incognito)
+            user_data_dir = "./chrome_user_data"
+            print(f"Launching browser in persistent mode (User Data: {user_data_dir})...")
+            
+            context = p.chromium.launch_persistent_context(
+                user_data_dir,
                 headless=False,
                 args=[
                     "--disable-blink-features=AutomationControlled", 
                 ]
             )
             
-            # Create a new page
-            page = browser.new_page()
+            # Get the default page
+            page = context.pages[0] if context.pages else context.new_page()
             
             # Apply manual stealth settings via init scripts
             print("Applying manual stealth settings...")
@@ -51,14 +53,12 @@ def main():
             print("Press Enter in this terminal to close the script (browser will remain open)...")
             input()
             
-            # We don't close the browser here because it's a remote connection to a user's browser
-            page.close()
+            context.close()
             
         except Exception as e:
             print(f"An error occurred: {e}")
             print("\nTroubleshooting:")
-            print("1. Ensure Chrome is running with: chrome.exe --remote-debugging-port=9222")
-            print("2. Ensure no other debugger is connected to that port.")
+            print("1. Ensure no other Chrome instances are locking the './chrome_user_data' directory.")
 
 if __name__ == "__main__":
     main()
