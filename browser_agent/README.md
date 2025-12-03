@@ -26,6 +26,13 @@ The script now launches its own browser instance with specific flags to avoid de
 python bot_test.py
 ```
 
+### Run XHS Search Test
+Executes the search and extraction workflow on Xiaohongshu.
+
+```powershell
+python xhs_search_test.py
+```
+
 ## Success Status (Verified 2025-12-03)
 The script successfully passes bot detection checks on `https://bot.sannysoft.com/`.
 
@@ -48,6 +55,27 @@ The script successfully passes bot detection checks on `https://bot.sannysoft.co
 -   **Persistent Profile**: Saves login state and cookies to `./chrome_user_data`.
 -   **Fixed Viewport**: Configured to 1440x900 to ensure consistent rendering across tabs.
 -   **Bot Detection Test**: Navigates to `https://bot.sannysoft.com/` to verify stealth effectiveness.
+
+### XHS Search & Extraction (`xhs_search_test.py`)
+A specialized script for interacting with Xiaohongshu (Little Red Book).
+
+**Features:**
+1.  **Robust Search**:
+    -   Handles input clearing (detects and clicks the "x" icon).
+    -   Uses `Enter` key submission for better reliability.
+    -   Waits for results using selector-based timeouts rather than strict network idle states.
+2.  **Result List Extraction**:
+    -   Extracts top 15 search results.
+    -   Parses Title and Like counts into a Markdown table.
+3.  **Detail View Extraction**:
+    -   Clicks into specific posts (e.g., the 3rd result).
+    -   **Basic Info**: Title, Author, Date/Location.
+    -   **Content**: Full post text.
+    -   **Tags**: Extracts hashtags (filtering out non-tag elements).
+    -   **Stats**: Likes, Collections, Comments.
+    -   **Comments**: Extracts top 5 parent comments and their first replies, including author, date, location, and like counts (normalizing "赞" to "0").
+4.  **Scoped Selectors**:
+    -   All extractions are scoped to `#noteContainer` to avoid interference from the background feed.
 
 ### Scripts
 -   **`bot_test.py`**: Verifies stealth capabilities against bot detection sites.

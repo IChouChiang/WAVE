@@ -2,7 +2,7 @@ import time
 from playwright.sync_api import sync_playwright
 
 MAX_WIDTH = 1440
-MAX_HEIGHT = 900
+MAX_HEIGHT = 800
 
 def main():
     print("Starting Playwright script...")
