@@ -22,7 +22,8 @@ This directory contains scripts for browser automation using Playwright with ste
 The project has been refactored into a modular architecture for better maintainability and reusability.
 
 *   **`browser_utils.py`**: 
-    *   Handles browser initialization.
+    *   **`launch_persistent_browser`**: Initializes the browser with persistent storage (cookies/login) and stealth settings.
+    *   **`get_ip_location`**: Automatically detects the user's real-world location via IP to enable "Nearby" search filters.
     *   Manages persistent contexts (cookies, login sessions).
     *   Applies stealth techniques (removing `navigator.webdriver`, custom user agent args).
 *   **`xhs_actions.py`**: 
@@ -32,6 +33,10 @@ The project has been refactored into a modular architecture for better maintaina
     *   `extract_post_details(page)`: scrapes deep details including full text, tags, stats, and comments.
     *   `close_post_details(page)`: handles modal navigation.
     *   `apply_search_filters(page, filters)`: applies search filters (Sort, Type, Time, Scope, Location).
+*   **`deepseek_agent.py`**:
+    *   **DeepSeek Agent**: A standalone agent script that uses the DeepSeek API (Thinking Mode) to autonomously explore XHS.
+    *   Implements a tool-use loop where the LLM decides which browser actions to take based on user goals.
+    *   Tools: `launch_browser`, `search`, `filter_results`, `get_results_list`, `open_post`, `get_post_details`, `close_post`.
 *   **`xhs_mcp_server.py`**:
     *   **MCP Server Implementation**: Exposes the browser actions as Model Context Protocol (MCP) tools.
     *   Allows LLMs (like DeepSeek, Claude, etc.) to control the browser programmatically.
@@ -45,7 +50,22 @@ The project has been refactored into a modular architecture for better maintaina
 
 ## Usage
 
-### Run MCP Tool Simulation
+### 1. DeepSeek Agent (Autonomous Mode)
+Run the autonomous agent to explore XHS with natural language commands.
+```powershell
+python browser_agent/deepseek_agent.py
+```
+**Important**: This script requires a DeepSeek API key.
+1.  Create a file named `ds_api.txt` in the `browser_agent` directory.
+2.  Paste your API key into this file (just the key, no extra text).
+
+### 2. MCP Server (Tool Mode)
+Run the MCP server to expose tools to an MCP-compatible client (e.g., Claude Desktop, Cursor).
+```powershell
+python browser_agent/xhs_mcp_server.py
+```
+
+### 3. Run MCP Tool Simulation
 Verifies that the MCP tools are working correctly by simulating an LLM interaction sequence.
 
 ```powershell

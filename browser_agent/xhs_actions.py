@@ -58,13 +58,25 @@ def apply_search_filters(page: Page, filters: dict):
                              - "笔记类型": "不限", "视频", "图文"
                              - "发布时间": "不限", "一天内", "一周内", "半年内"
                              - "搜索范围": "不限", "已看过", "未看过", "已关注"
-                             - "位置距离": "不限", "同城", "附近"
+                             - "位置距离": "不限", "同城", "附近" (Requires geolocation permission)
                         Value: Option name (e.g., "最新", "视频", "未看过")
+    
+    Note:
+        The "位置距离" (Location) filter relies on the browser's geolocation. 
+        Ensure the browser is launched with geolocation permissions and coordinates 
+        (handled automatically by launch_persistent_browser).
     """
     print(f"Applying filters: {filters}")
     
     # Selector for the filter dropdown button
-    filter_btn_selector = ".search-layout__top clientonly > div > span"
+    # Try multiple potential selectors for robustness
+    filter_btn_selectors = [
+        ".search-layout__top clientonly > div > span", # Original specific path
+        ".filter-box", # Common class name
+        ".filter-icon", # The icon itself
+        "text=综合", # Often the default text
+        "text=筛选"  # Sometimes "Filter"
+    ]
     
     for category, option in filters.items():
         print(f"Setting '{category}' to '{option}'...")
@@ -73,14 +85,32 @@ def apply_search_filters(page: Page, filters: dict):
             # 1. Open the dropdown if not visible
             if not page.locator(".filters-wrapper").is_visible():
                 print("Opening filter dropdown...")
-                # Try to find the button. If the specific selector fails, try a broader one or handle error.
-                btn = page.locator(filter_btn_selector)
-                if not btn.is_visible():
-                     # Fallback: sometimes the structure might be slightly different or it's just ".filter-box"
-                     # But based on user input, we stick to the structure.
-                     pass
-                btn.click()
-                page.wait_for_selector(".filters-wrapper", timeout=3000)
+                
+                dropdown_opened = False
+                for selector in filter_btn_selectors:
+                    try:
+                        btn = page.locator(selector).first
+                        if btn.is_visible():
+                            print(f"Clicking filter button candidate: {selector}")
+                            btn.click()
+                            
+                            # Check if it worked
+                            try:
+                                page.wait_for_selector(".filters-wrapper", state="visible", timeout=2000)
+                                print("Filter dropdown opened successfully.")
+                                dropdown_opened = True
+                                break
+                            except:
+                                print(f"Clicking {selector} did not open .filters-wrapper. Trying next...")
+                    except Exception as e:
+                        print(f"Error interacting with {selector}: {e}")
+                        continue
+                
+                if not dropdown_opened:
+                    print("Failed to open filter dropdown with all selectors. Checking if it's visible anyway...")
+                
+                # DEBUG: Pause to let user see the dropdown
+                time.sleep(2) 
             
             # 2. Find the category row
             filter_rows = page.locator(".filters-wrapper .filters").all()
@@ -108,8 +138,29 @@ def apply_search_filters(page: Page, filters: dict):
                         print(f"Option '{option}' is already active.")
                         option_clicked = True
                     else:
-                        tag.click()
+                        # Try clicking the span inside for better precision
+                        span = tag.locator("span").first
+                        if span.is_visible():
+                            span.click()
+                        else:
+                            tag.click()
+                        
                         print(f"Clicked option '{option}'.")
+                        
+                        # Verify if it became active
+                        try:
+                            # Wait up to 2s for the class to change to active
+                            # We need to re-locate or check the attribute again
+                            # Note: The element handle 'tag' might become stale if the page re-renders immediately
+                            # But usually the class update happens first.
+                            for _ in range(10):
+                                if "active" in (tag.get_attribute("class") or ""):
+                                    print(f"Verified: Option '{option}' is now active.")
+                                    break
+                                time.sleep(0.2)
+                        except:
+                            pass
+
                         option_clicked = True
                         # Wait for reload/update. 
                         # Note: Clicking a filter often triggers a reload which might close the dropdown.
@@ -121,6 +172,8 @@ def apply_search_filters(page: Page, filters: dict):
                 
         except Exception as e:
             print(f"Error applying filter {category}={option}: {e}")
+
+
 
 def extract_search_results(page: Page, max_results: int = 15) -> str:
     """

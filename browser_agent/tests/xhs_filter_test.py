@@ -58,12 +58,7 @@ def main():
 
             # Test 5: Location Distance (Same City)
             print("\n--- Test 5: Location Distance (Same City) ---")
-            apply_search_filters(page, {"位置距离": "同城"})
-            extract_search_results(page, max_results=5)
-            
-            # New Search
-            print("\n--- New Search: Coffee ---")
-            search_xhs(page, "咖啡")
+            apply_search_filters(page, {"位置距离": "附近"})
             extract_search_results(page, max_results=5)
             
             print("\nTest completed. Press Enter to exit.")

@@ -11,9 +11,11 @@ from browser_utils import launch_persistent_browser
 from xhs_actions import search_xhs, extract_search_results, extract_post_details, close_post_details, apply_search_filters
 
 # Initialize FastMCP server
+# This server exposes the browser automation tools to any MCP-compatible client (e.g., Claude Desktop, Cursor).
 mcp = FastMCP("XHS Browser Agent")
 
 # Global state for browser
+# We use a global state to maintain the browser session across multiple tool calls.
 class BrowserState:
     playwright = None
     context: Optional[BrowserContext] = None
@@ -26,6 +28,11 @@ def launch_browser() -> str:
     """
     Launches the persistent browser session for Xiaohongshu.
     Must be called before any other tools.
+    
+    This tool initializes the Playwright browser with:
+    1. Persistent context (saves cookies/login).
+    2. Stealth settings (evades bot detection).
+    3. Auto-detected geolocation (enables 'Nearby' features).
     """
     if state.page:
         return "Browser is already running."
@@ -60,11 +67,16 @@ def search(query: str) -> str:
 @mcp.tool()
 def filter_results(category: str, option: str) -> str:
     """
-    Applies a search filter.
+    Applies a search filter. You must use the EXACT option names listed below.
     
     Args:
-        category: Filter category (e.g., "排序依据", "笔记类型", "发布时间", "搜索范围", "位置距离").
-        option: Filter option (e.g., "最新", "视频", "一周内", "未看过", "同城").
+        category: Filter category. Allowed values: "排序依据", "笔记类型", "发布时间", "搜索范围", "位置距离"
+        option: Filter option. You MUST use one of the following EXACT strings:
+            - For "排序依据": "综合", "最新", "最多点赞", "最多评论", "最多收藏"
+            - For "笔记类型": "不限", "视频", "图文"
+            - For "发布时间": "不限", "一天内", "一周内", "半年内"
+            - For "搜索范围": "不限", "已看过", "未看过", "已关注"
+            - For "位置距离": "不限", "同城", "附近"
     """
     if not state.page:
         return "Error: Browser not running. Call launch_browser() first."

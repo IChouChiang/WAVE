@@ -1,15 +1,51 @@
 from playwright.sync_api import Playwright, BrowserContext, Page
+import json
+import urllib.request
 
 MAX_WIDTH = 1440
 MAX_HEIGHT = 800
 
+def get_ip_location():
+    """
+    Detects the user's physical location via their public IP address.
+    
+    Returns:
+        dict: A dictionary containing 'latitude' and 'longitude'.
+              Defaults to Shanghai coordinates if detection fails.
+    """
+    try:
+        with urllib.request.urlopen("http://ip-api.com/json/", timeout=3) as url:
+            data = json.loads(url.read().decode())
+            if data.get("status") == "success":
+                print(f"Detected IP Location: {data['city']}, {data['country']} ({data['lat']}, {data['lon']})")
+                return {"latitude": data["lat"], "longitude": data["lon"]}
+    except Exception as e:
+        print(f"Warning: Could not detect IP location ({e}). Using default.")
+    return {"latitude": 31.2304, "longitude": 121.4737} # Default to Shanghai
+
 def launch_persistent_browser(p: Playwright, user_data_dir: str = "./chrome_user_data", headless: bool = False) -> tuple[BrowserContext, Page]:
     """
-    Launches a persistent browser context with stealth settings.
-    Returns the context and the first page.
+    Launches a persistent browser context with stealth settings and auto-detected location.
+    
+    Args:
+        p (Playwright): The Playwright instance.
+        user_data_dir (str): Path to the directory for storing user data (cookies, cache).
+        headless (bool): Whether to run the browser in headless mode.
+        
+    Returns:
+        tuple[BrowserContext, Page]: The browser context and the first page object.
+        
+    Features:
+        - Persistent Context: Saves login state and cookies.
+        - Stealth Mode: Hides automation flags (navigator.webdriver).
+        - Auto-Location: Injects the user's real IP-based geolocation to enable "Nearby" features.
     """
     print(f"Launching browser in persistent mode (User Data: {user_data_dir})...")
     
+    # Detect location
+    location = get_ip_location()
+    print(f"Using location: {location}")
+
     context = p.chromium.launch_persistent_context(
         user_data_dir,
         headless=headless,
@@ -18,6 +54,8 @@ def launch_persistent_browser(p: Playwright, user_data_dir: str = "./chrome_user
             "--start-maximized",
         ],
         viewport={"width": MAX_WIDTH, "height": MAX_HEIGHT},
+        permissions=["geolocation"],
+        geolocation=location,
     )
     
     page = context.pages[0] if context.pages else context.new_page()
