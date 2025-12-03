@@ -122,26 +122,26 @@ def apply_search_filters(page: Page, filters: dict):
         except Exception as e:
             print(f"Error applying filter {category}={option}: {e}")
 
-def extract_search_results(page: Page, max_results: int = 15):
+def extract_search_results(page: Page, max_results: int = 15) -> str:
     """
-    Extracts the top N search results (Title and Likes) and prints a Markdown table.
+    Extracts the top N search results (Title and Likes) and returns a Markdown table string.
     
     Args:
         page (Page): The Playwright page object.
         max_results (int): Maximum number of results to extract (default: 15).
         
-    Output:
-        Prints a Markdown formatted table to stdout.
+    Returns:
+        str: A Markdown formatted table of results.
     """
-    print(f"\n### Top {max_results} Results for current search")
-    print("| Title | Likes |")
-    print("| --- | --- |")
+    output = []
+    output.append(f"\n### Top {max_results} Results for current search")
+    output.append("| Title | Likes |")
+    output.append("| --- | --- |")
     
     try:
         page.wait_for_selector(".footer", timeout=5000)
     except:
-        print("No results found.")
-        return
+        return "No results found."
 
     footers = page.locator(".footer").all()
     
@@ -162,31 +162,28 @@ def extract_search_results(page: Page, max_results: int = 15):
             # Sanitize title
             title = title.replace("|", "-").replace("\n", " ").strip()
             
-            print(f"| {title} | {likes} |")
+            output.append(f"| {title} | {likes} |")
             count += 1
         except Exception as e:
-            print(f"Error extracting item: {e}")
+            output.append(f"Error extracting item: {e}")
             continue
-    print("\n")
+    
+    result_str = "\n".join(output) + "\n"
+    print(result_str) # Keep printing for terminal monitoring
+    return result_str
 
-def extract_post_details(page: Page):
+def extract_post_details(page: Page) -> str:
     """
     Extracts detailed information from the currently open post modal.
     
     Args:
         page (Page): The Playwright page object.
         
-    Details Extracted:
-        - Title, Author, Date/Location
-        - Full Post Text
-        - Tags (hashtags)
-        - Statistics (Likes, Collections, Comments) - Normalizes "赞" to "0"
-        - Top Comments (Parent comments + up to 1 reply each)
-        
-    Output:
-        Prints structured information to stdout.
+    Returns:
+        str: Structured information in Markdown format.
     """
-    print("\n### Post Details Extraction")
+    output = []
+    output.append("\n### Post Details Extraction")
     
     try:
         # Wait for the note container to appear
@@ -214,7 +211,7 @@ def extract_post_details(page: Page):
             if date_el.is_visible():
                 date_loc = date_el.inner_text().strip()
         except Exception as e:
-            print(f"Error extracting basic info: {e}")
+            output.append(f"Error extracting basic info: {e}")
         
         # 1. Extract Text
         note_text = ""
@@ -226,7 +223,7 @@ def extract_post_details(page: Page):
             if text_container.is_visible():
                 note_text = text_container.inner_text().strip()
         except Exception as e:
-            print(f"Error extracting text: {e}")
+            output.append(f"Error extracting text: {e}")
             
         # 2. Extract Tags
         tags_list = []
@@ -241,7 +238,7 @@ def extract_post_details(page: Page):
                     if text.startswith("#"):
                         tags_list.append(text)
         except Exception as e:
-            print(f"Error extracting tags: {e}")
+            output.append(f"Error extracting tags: {e}")
 
         # 3. Extract Stats (Likes, Collections, Comments)
         likes = "0"
@@ -264,7 +261,7 @@ def extract_post_details(page: Page):
                 chat_text = chat_el.inner_text().strip()
                 comments = "0" if chat_text == "评论" else chat_text
         except Exception as e:
-            print(f"Error extracting stats: {e}")
+            output.append(f"Error extracting stats: {e}")
             
         # 4. Extract Comments
         comments_list = []
@@ -274,7 +271,7 @@ def extract_post_details(page: Page):
                 comment_count_int = int(comments)
             
             if comment_count_int > 0:
-                print("Extracting comments...")
+                output.append("Extracting comments...")
                 
                 try:
                     container.locator(".parent-comment").first.wait_for(state="visible", timeout=3000)
@@ -324,32 +321,36 @@ def extract_post_details(page: Page):
                         comments_list.append(c_data)
                         
                     except Exception as e:
-                        print(f"Error extracting comment {i}: {e}")
+                        output.append(f"Error extracting comment {i}: {e}")
                         
         except Exception as e:
-            print(f"Error in comment extraction block: {e}")
+            output.append(f"Error in comment extraction block: {e}")
 
         # Format as Markdown
-        print("\n--- Post Analysis ---")
-        print(f"**Title:** {title}")
-        print(f"**Author:** {author} ({date_loc})")
-        print(f"**Text Content:**\n{note_text}\n")
-        print(f"**Tags:** {', '.join(tags_list)}")
-        print(f"**Stats:** Likes: {likes} | Collections: {collections} | Comments: {comments}")
+        output.append("\n--- Post Analysis ---")
+        output.append(f"**Title:** {title}")
+        output.append(f"**Author:** {author} ({date_loc})")
+        output.append(f"**Text Content:**\n{note_text}\n")
+        output.append(f"**Tags:** {', '.join(tags_list)}")
+        output.append(f"**Stats:** Likes: {likes} | Collections: {collections} | Comments: {comments}")
         
         if comments_list:
-            print("\n**Top Comments:**")
+            output.append("\n**Top Comments:**")
             for c in comments_list:
                 top_badge = "[TOP] " if c.get('is_top') else ""
-                print(f"- {top_badge}**{c['author']}** ({c['date']} {c['location']}) [Likes: {c['likes']}]: {c['content']}")
+                output.append(f"- {top_badge}**{c['author']}** ({c['date']} {c['location']}) [Likes: {c['likes']}]: {c['content']}")
                 if c.get('reply'):
                     r = c['reply']
-                    print(f"  - > **{r['author']}** ({r['date']} {r['location']}) [Likes: {r['likes']}]: {r['content']}")
+                    output.append(f"  - > **{r['author']}** ({r['date']} {r['location']}) [Likes: {r['likes']}]: {r['content']}")
 
-        print("---------------------\n")
+        output.append("---------------------\n")
         
     except Exception as e:
-        print(f"Failed to extract post details: {e}")
+        output.append(f"Failed to extract post details: {e}")
+    
+    result_str = "\n".join(output)
+    print(result_str) # Keep printing for terminal monitoring
+    return result_str
 
 def close_post_details(page: Page):
     """

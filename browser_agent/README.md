@@ -32,13 +32,35 @@ The project has been refactored into a modular architecture for better maintaina
     *   `extract_post_details(page)`: scrapes deep details including full text, tags, stats, and comments.
     *   `close_post_details(page)`: handles modal navigation.
     *   `apply_search_filters(page, filters)`: applies search filters (Sort, Type, Time, Scope, Location).
+*   **`xhs_mcp_server.py`**:
+    *   **MCP Server Implementation**: Exposes the browser actions as Model Context Protocol (MCP) tools.
+    *   Allows LLMs (like DeepSeek, Claude, etc.) to control the browser programmatically.
+    *   Tools: `launch_browser`, `search`, `filter_results`, `get_search_results_list`, `open_post`, `get_post_details`, `close_post`.
 *   **`tests/`**:
     *   **`xhs_search_test.py`**: Main orchestration script. Launch -> Search -> Extract List -> Click Post -> Extract Details -> Close -> Next Post.
     *   **`xhs_filter_test.py`**: Verifies search filter functionality (Sort, Type, Time, Scope, Location).
     *   **`xhs_debug_filter.py`**: Utility to freeze the page for inspecting dynamic filter components.
     *   **`bot_test.py`**: Verifies stealth capabilities against bot detection sites.
+    *   **`test_mcp_simulation.py`**: Simulates an LLM calling the MCP tools to verify the full toolchain.
 
 ## Usage
+
+### Run MCP Tool Simulation
+Verifies that the MCP tools are working correctly by simulating an LLM interaction sequence.
+
+```powershell
+python browser_agent/tests/test_mcp_simulation.py
+```
+
+**Simulation Results (Verified 2025-12-04):**
+The simulation successfully performed the following sequence:
+1.  **Launch**: Opened persistent browser.
+2.  **Search**: Searched for "DeepSeek".
+3.  **Filter**: Applied "Sort by Latest" (排序依据=最新).
+4.  **List**: Extracted top results (e.g., "V3.2正式版...").
+5.  **Open**: Opened the first post.
+6.  **Details**: Extracted full content, stats (Likes: 1163), and nested comments.
+7.  **Close**: Closed the post modal.
 
 ### Run XHS Search & Extraction
 This is the main entry point for the XHS automation workflow.
