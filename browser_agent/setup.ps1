@@ -84,13 +84,37 @@ python -m playwright install chromium
 
 # Create .env file if it doesn't exist
 if (-not (Test-Path ".env")) {
-    Write-Info "Creating .env file from template..."
+    Write-Info "Creating .env file..."
     if (Test-Path ".env.example") {
+        Write-Info "Found .env.example, copying to .env..."
         Copy-Item .env.example .env
         Write-Success ".env file created from template"
+    } else {
+        Write-Warning ".env.example not found. Creating .env with default values..."
+        $defaultEnv = @'
+# DeepSeek API Configuration (Required for deepseek_agent.py)
+DEEPSEEK_API_KEY=
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+
+# Browser Configuration
+CHROME_USER_DATA_DIR=./chrome_user_data
+BROWSER_HEADLESS=false
+BROWSER_WIDTH=1440
+BROWSER_HEIGHT=800
+
+# Xiaohongshu Configuration
+XHS_EXPLORE_URL=https://www.xiaohongshu.com/explore
+
+# MCP Server Configuration
+MCP_SERVER_HOST=127.0.0.1
+MCP_SERVER_PORT=8000
+'@
+        Set-Content -Path ".env" -Value $defaultEnv -Encoding UTF8
+        Write-Success ".env file created with default values"
+    }
         
-        # Check if ds_api.txt exists and update .env with API key
-        if (Test-Path "ds_api.txt") {
+    # Check if ds_api.txt exists and update .env with API key
+    if (Test-Path "ds_api.txt") {
             Write-Info "Found ds_api.txt, updating .env with API key..."
             try {
                 $apiKey = Get-Content "ds_api.txt" -Raw -Encoding UTF8
@@ -118,10 +142,7 @@ if (-not (Test-Path ".env")) {
             Write-Warning "Please edit .env file to add your DeepSeek API key"
             Write-Warning "Or create ds_api.txt file with your API key"
         }
-    } else {
-        Write-Error ".env.example not found"
-        exit 1
-    }
+    # Removed the else block that exited if .env.example was missing
 } else {
     Write-Warning ".env file already exists"
     # Check if .env has API key, if not try to load from ds_api.txt

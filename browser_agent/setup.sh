@@ -90,13 +90,36 @@ python -m playwright install chromium
 
 # Create .env file if it doesn't exist
 if [ ! -f ".env" ]; then
-    print_info "Creating .env file from template..."
+    print_info "Creating .env file..."
     if [ -f ".env.example" ]; then
+        print_info "Found .env.example, copying to .env..."
         cp .env.example .env
         print_success ".env file created from template"
+    else
+        print_warning ".env.example not found. Creating .env with default values..."
+        cat > .env << EOF
+# DeepSeek API Configuration (Required for deepseek_agent.py)
+DEEPSEEK_API_KEY=
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+
+# Browser Configuration
+CHROME_USER_DATA_DIR=./chrome_user_data
+BROWSER_HEADLESS=false
+BROWSER_WIDTH=1440
+BROWSER_HEIGHT=800
+
+# Xiaohongshu Configuration
+XHS_EXPLORE_URL=https://www.xiaohongshu.com/explore
+
+# MCP Server Configuration
+MCP_SERVER_HOST=127.0.0.1
+MCP_SERVER_PORT=8000
+EOF
+        print_success ".env file created with default values"
+    fi
         
-        # Check if ds_api.txt exists and update .env with API key
-        if [ -f "ds_api.txt" ]; then
+    # Check if ds_api.txt exists and update .env with API key
+    if [ -f "ds_api.txt" ]; then
             print_info "Found ds_api.txt, updating .env with API key..."
             if command -v sed &> /dev/null; then
                 # Read API key from ds_api.txt
@@ -124,10 +147,7 @@ if [ ! -f ".env" ]; then
             print_warning "Please edit .env file to add your DeepSeek API key"
             print_warning "Or create ds_api.txt file with your API key"
         fi
-    else
-        print_error ".env.example not found"
-        exit 1
-    fi
+    # Removed the else block that exited if .env.example was missing
 else
     print_warning ".env file already exists"
     # Check if .env has API key, if not try to load from ds_api.txt
