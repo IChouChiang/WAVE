@@ -52,31 +52,49 @@ python xhs_mcp_server.py
 
 ## Python Environment Setup
 
-### Problem
-After setting up the virtual environment, you might need to use the full path to Python:
+### Common Error: ModuleNotFoundError
+If you see errors like `ModuleNotFoundError: No module named 'playwright'`, it means you're not using the virtual environment:
+
 ```powershell
-.\venv\Scripts\python.exe tests/xhs_search_test.py
+# ❌ WRONG - Running without activating virtual environment
+python .\deepseek_agent.py
+# Error: ModuleNotFoundError: No module named 'playwright'
+
+# ✅ CORRECT - First activate the virtual environment
+.\venv\Scripts\Activate.ps1
+python .\deepseek_agent.py
+# Success: Agent starts normally
 ```
 
-### Solution
-Use the virtual environment activation scripts:
+### Solution: Activate Virtual Environment
+Always activate the virtual environment before running Python scripts:
 
 #### Windows (PowerShell)
 ```powershell
+# Navigate to browser_agent directory
+cd browser_agent
+
 # Activate virtual environment
 .\venv\Scripts\Activate.ps1
 
+# Your prompt should change to show (venv)
 # Now you can use python directly
+python deepseek_agent.py
 python tests/xhs_search_test.py
 python --version
 ```
 
 #### macOS/Linux
 ```bash
+# Navigate to browser_agent directory
+cd browser_agent
+
 # Activate virtual environment
 source venv/bin/activate
 
+# Your prompt should change to show (venv)
 # Now you can use python directly
+python deepseek_agent.py
 python tests/xhs_search_test.py
 python --version
 ```

@@ -53,8 +53,30 @@ chmod +x setup.sh
 ./setup.sh
 
 # Run the autonomous agent
+# IMPORTANT: You must activate the virtual environment first!
+# Windows: .\venv\Scripts\Activate.ps1
+# macOS/Linux: source venv/bin/activate
 python deepseek_agent.py
 ```
+
+#### Important: Virtual Environment Activation
+Before running any Python scripts, you must activate the virtual environment:
+
+**Windows (PowerShell):**
+```powershell
+cd browser_agent
+.\venv\Scripts\Activate.ps1
+python deepseek_agent.py
+```
+
+**macOS/Linux:**
+```bash
+cd browser_agent
+source venv/bin/activate
+python deepseek_agent.py
+```
+
+**Common Error:** If you see `ModuleNotFoundError: No module named 'playwright'`, it means you forgot to activate the virtual environment.
 
 #### API Key Setup
 The browser agent requires a DeepSeek API key. You have two options:
