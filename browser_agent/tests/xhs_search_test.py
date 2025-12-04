@@ -24,10 +24,11 @@ def main():
     with sync_playwright() as p:
         try:
             # Launch browser using the utility function
-            context, page = launch_persistent_browser(p, user_data_dir="./chrome_user_data")
+            context, page = launch_persistent_browser(p)
             
             # 1. Navigate to Explore page
-            url = "https://www.xiaohongshu.com/explore"
+            from config import config
+            url = config.XHS_EXPLORE_URL
             print(f"Navigating to {url}...")
             page.goto(url)
             page.wait_for_load_state("domcontentloaded")

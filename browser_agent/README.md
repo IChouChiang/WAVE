@@ -2,122 +2,273 @@
 
 This directory contains scripts for browser automation using Playwright with stealth capabilities, specifically tailored for Xiaohongshu (XHS) data extraction.
 
-## Setup
+## 🚀 Quick Start
 
-1.  **Create Virtual Environment**:
-    ```powershell
-    cd browser_agent
-    python -m venv venv
-    .\venv\Scripts\Activate.ps1
-    ```
+### Option 1: Automated Setup (Recommended)
+```bash
+# On macOS/Linux:
+chmod +x setup.sh
+./setup.sh
 
-2.  **Install Dependencies**:
-    ```powershell
-    pip install -r requirements.txt
-    playwright install chromium
-    ```
-
-## Project Structure
-
-The project has been refactored into a modular architecture for better maintainability and reusability.
-
-*   **`browser_utils.py`**: 
-    *   **`launch_persistent_browser`**: Initializes the browser with persistent storage (cookies/login) and stealth settings.
-    *   **`get_ip_location`**: Automatically detects the user's real-world location via IP to enable "Nearby" search filters.
-    *   Manages persistent contexts (cookies, login sessions).
-    *   Applies stealth techniques (removing `navigator.webdriver`, custom user agent args).
-*   **`xhs_actions.py`**: 
-    *   Contains the core business logic for Xiaohongshu interactions.
-    *   `search_xhs(page, query)`: robust search with input clearing.
-    *   `extract_search_results(page)`: scrapes search result titles and likes.
-    *   `extract_post_details(page)`: scrapes deep details including full text, tags, stats, and comments.
-    *   `close_post_details(page)`: handles modal navigation.
-    *   `apply_search_filters(page, filters)`: applies search filters (Sort, Type, Time, Scope, Location).
-*   **`deepseek_agent.py`**:
-    *   **DeepSeek Agent**: A standalone agent script that uses the DeepSeek API (Thinking Mode) to autonomously explore XHS.
-    *   Implements a tool-use loop where the LLM decides which browser actions to take based on user goals.
-    *   Tools: `launch_browser`, `search`, `filter_results`, `get_results_list`, `open_post`, `get_post_details`, `close_post`.
-*   **`xhs_mcp_server.py`**:
-    *   **MCP Server Implementation**: Exposes the browser actions as Model Context Protocol (MCP) tools.
-    *   Allows LLMs (like DeepSeek, Claude, etc.) to control the browser programmatically.
-    *   Tools: `launch_browser`, `search`, `filter_results`, `get_search_results_list`, `open_post`, `get_post_details`, `close_post`.
-*   **`tests/`**:
-    *   **`xhs_search_test.py`**: Main orchestration script. Launch -> Search -> Extract List -> Click Post -> Extract Details -> Close -> Next Post.
-    *   **`xhs_filter_test.py`**: Verifies search filter functionality (Sort, Type, Time, Scope, Location).
-    *   **`xhs_debug_filter.py`**: Utility to freeze the page for inspecting dynamic filter components.
-    *   **`bot_test.py`**: Verifies stealth capabilities against bot detection sites.
-    *   **`test_mcp_simulation.py`**: Simulates an LLM calling the MCP tools to verify the full toolchain.
-
-## Usage
-
-### 1. DeepSeek Agent (Autonomous Mode)
-Run the autonomous agent to explore XHS with natural language commands.
-```powershell
-python browser_agent/deepseek_agent.py
-```
-**Important**: This script requires a DeepSeek API key.
-1.  Create a file named `ds_api.txt` in the `browser_agent` directory.
-2.  Paste your API key into this file (just the key, no extra text).
-
-### 2. MCP Server (Tool Mode)
-Run the MCP server to expose tools to an MCP-compatible client (e.g., Claude Desktop, Cursor).
-```powershell
-python browser_agent/xhs_mcp_server.py
+# On Windows (PowerShell):
+.\setup.ps1
 ```
 
-### 3. Run MCP Tool Simulation
-Verifies that the MCP tools are working correctly by simulating an LLM interaction sequence.
+### Option 2: Manual Setup
+```bash
+# Clone the repository
+git clone <repository-url>
+cd WAVE/browser_agent
 
-```powershell
-python browser_agent/tests/test_mcp_simulation.py
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+# .\venv\Scripts\Activate.ps1
+
+# Install dependencies
+pip install -r requirements.txt
+playwright install chromium
+
+# Configuration
+cp .env.example .env
+# Edit .env file to add your DeepSeek API key
 ```
 
-**Simulation Results (Verified 2025-12-04):**
-The simulation successfully performed the following sequence:
-1.  **Launch**: Opened persistent browser.
-2.  **Search**: Searched for "DeepSeek".
-3.  **Filter**: Applied "Sort by Latest" (排序依据=最新).
-4.  **List**: Extracted top results (e.g., "V3.2正式版...").
-5.  **Open**: Opened the first post.
-6.  **Details**: Extracted full content, stats (Likes: 1163), and nested comments.
-7.  **Close**: Closed the post modal.
+### 3. Run Tests
+```bash
+# Test browser automation
+python tests/xhs_search_test.py
 
-### Run XHS Search & Extraction
-This is the main entry point for the XHS automation workflow.
+# Test DeepSeek agent (requires API key)
+python deepseek_agent.py
 
-```powershell
-python browser_agent/tests/xhs_search_test.py
+# Start MCP server
+python xhs_mcp_server.py
 ```
 
-**Workflow:**
-1.  Launches a persistent Chrome instance (you will stay logged in across runs).
-2.  Navigates to Xiaohongshu.
-3.  Searches for "AI Agent".
-4.  Extracts the top search results to the console.
-5.  Opens the 3rd post, extracts full details (including comments), and closes it.
-6.  Opens the 4th post, extracts full details, and closes it.
-7.  **Pauses** and waits for you to press `Enter` in the terminal to exit. This allows you to inspect the browser state.
+## 🐍 Python Environment Setup
 
-### Run Filter Test
-Verifies that search filters work correctly.
-
+### Problem
+After setting up the virtual environment, you might need to use the full path to Python:
 ```powershell
-python browser_agent/tests/xhs_filter_test.py
+.\venv\Scripts\python.exe tests/xhs_search_test.py
 ```
 
-### Run Bot Detection Test
-Verifies that the browser configuration is not detected as a bot.
+### Solution
+Use the virtual environment activation scripts:
 
+#### Windows (PowerShell)
 ```powershell
-python browser_agent/tests/bot_test.py
+# Activate virtual environment
+.\venv\Scripts\Activate.ps1
+
+# Now you can use python directly
+python tests/xhs_search_test.py
+python --version
 ```
 
-## Key Features
+#### macOS/Linux
+```bash
+# Activate virtual environment
+source venv/bin/activate
 
-### 1. Stealth Mode
--   **`--disable-blink-features=AutomationControlled`**: Removes the "controlled by automation" flag.
--   **`navigator.webdriver` Override**: Manually deletes the webdriver property via script injection.
--   **Persistent Context**: Uses `./chrome_user_data` to save your login session. You only need to scan the QR code once.
+# Now you can use python directly
+python tests/xhs_search_test.py
+python --version
+```
+
+#### Alternative: Direct Python Path
+If you prefer not to activate the environment, use the full path:
+
+**Windows:**
+```powershell
+.\venv\Scripts\python.exe tests/xhs_search_test.py
+```
+
+**macOS/Linux:**
+```bash
+./venv/bin/python tests/xhs_search_test.py
+```
+
+### Deactivating the Environment
+When you're done, deactivate the virtual environment:
+```bash
+deactivate
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+Create a `.env` file in the `browser_agent` directory with the following settings:
+
+```env
+# DeepSeek API Configuration (Required for deepseek_agent.py)
+DEEPSEEK_API_KEY=your_api_key_here
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+
+# Browser Configuration
+CHROME_USER_DATA_DIR=./chrome_user_data
+BROWSER_HEADLESS=false
+BROWSER_WIDTH=1440
+BROWSER_HEIGHT=800
+
+# Xiaohongshu Configuration
+XHS_EXPLORE_URL=https://www.xiaohongshu.com/explore
+
+# MCP Server Configuration
+MCP_SERVER_HOST=127.0.0.1
+MCP_SERVER_PORT=8000
+```
+
+### API Key Setup
+1. Get your DeepSeek API key from: https://platform.deepseek.com/api_keys
+2. Add it to your `.env` file as `DEEPSEEK_API_KEY`
+3. **Important**: Never commit your `.env` file to version control
+
+## 📁 Project Structure
+
+```
+browser_agent/
+├── config.py              # Configuration management
+├── browser_utils.py       # Browser initialization and utilities
+├── xhs_actions.py         # Xiaohongshu interaction logic
+├── deepseek_agent.py      # Autonomous AI agent using DeepSeek API
+├── xhs_mcp_server.py      # MCP server for tool integration
+├── requirements.txt       # Python dependencies
+├── .env.example          # Example environment configuration
+├── README.md             # This file
+└── tests/                # Test scripts
+    ├── xhs_search_test.py
+    ├── xhs_filter_test.py
+    ├── bot_test.py
+    └── ...
+```
+
+### Core Modules
+
+*   **`config.py`** - Centralized configuration management using environment variables
+*   **`browser_utils.py`** - Browser initialization with stealth settings and persistent sessions
+*   **`xhs_actions.py`** - Core Xiaohongshu interaction logic (search, extraction, filtering)
+*   **`deepseek_agent.py`** - Autonomous AI agent using DeepSeek API with thinking mode
+*   **`xhs_mcp_server.py`** - MCP server exposing browser tools to LLM clients
+
+## 🛠️ Usage
+
+### DeepSeek Agent (Autonomous Mode)
+Run the autonomous agent to explore XHS with natural language commands:
+```bash
+python deepseek_agent.py
+```
+
+**Requirements**: DeepSeek API key in `.env` file
+
+### MCP Server (Tool Mode)
+Run the MCP server to expose tools to MCP-compatible clients (Claude Desktop, Cursor, etc.):
+```bash
+python xhs_mcp_server.py
+```
+
+### Testing
+```bash
+# Basic browser test
+python tests/xhs_search_test.py
+
+# Filter functionality test
+python tests/xhs_filter_test.py
+
+# Bot detection test
+python tests/bot_test.py
+
+# MCP tool simulation
+python tests/test_mcp_simulation.py
+```
+## 🌍 Cross-Platform Support
+
+The project is designed to work on Windows, macOS, and Linux. All hardcoded paths have been replaced with configuration variables.
+
+### Key Features
+- **Unified Configuration**: All platform-specific paths are managed through `.env` file
+- **Automated Setup**: One-click setup scripts for each platform
+- **Consistent API**: Same Python code works across all platforms
+
+### Configuration Files
+- **`.env`**: Local environment configuration (not committed to git)
+- **`.env.example`**: Example configuration template
+- **`config.py`**: Centralized configuration loader
+
+## 🔧 Development
+
+### Adding New Features
+1. Add configuration variables to `.env.example`
+2. Load them in `config.py`
+3. Use `config.variable_name` in your code
+4. Update README with usage instructions
+
+### Testing Changes
+```bash
+# Run all tests
+python -m pytest tests/
+
+# Run specific test
+python tests/xhs_search_test.py
+```
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+1. **"Module not found" errors**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **"DeepSeek API key not found"**
+   - Check that `.env` file exists in `browser_agent` directory
+   - Verify `DEEPSEEK_API_KEY` is set in `.env`
+   - Get API key from: https://platform.deepseek.com/api_keys
+
+3. **Browser won't launch**
+   ```bash
+   playwright install chromium
+   ```
+
+4. **Permission errors (macOS/Linux)**
+   ```bash
+   chmod +x venv/bin/activate
+   ```
+
+### Debug Mode
+Enable debug logging by setting in `.env`:
+```env
+DEBUG=true
+LOG_LEVEL=DEBUG
+```
+
+## 📞 Support
+
+### Getting Help
+- Check the [troubleshooting section](#-troubleshooting)
+- Review configuration in `.env` file
+- Enable debug mode for detailed logs
+
+### Reporting Issues
+When reporting issues, please include:
+1. Operating system (Windows/macOS/Linux)
+2. Python version (`python --version`)
+3. Configuration (redacted `.env` file)
+4. Error messages and logs
+
+## 📄 License
+
+This project is part of the WAVE repository. See the main repository for license information.
+
+---
+
+**Happy browsing!** 🚀
 
 ### 2. Robust Extraction
 -   **Scoped Selectors**: Uses specific container IDs (e.g., `#noteContainer`) to avoid scraping unrelated text from the background feed.

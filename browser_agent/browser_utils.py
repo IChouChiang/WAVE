@@ -1,9 +1,17 @@
 from playwright.sync_api import Playwright, BrowserContext, Page
 import json
 import urllib.request
+import os
+import sys
 
-MAX_WIDTH = 1440
-MAX_HEIGHT = 800
+# Add current directory to path for config import
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+try:
+    from config import config
+except ImportError:
+    # Fallback for direct execution
+    import config
+    config = config.config
 
 def get_ip_location():
     """
@@ -23,14 +31,16 @@ def get_ip_location():
         print(f"Warning: Could not detect IP location ({e}). Using default.")
     return {"latitude": 31.2304, "longitude": 121.4737} # Default to Shanghai
 
-def launch_persistent_browser(p: Playwright, user_data_dir: str = "./chrome_user_data", headless: bool = False) -> tuple[BrowserContext, Page]:
+def launch_persistent_browser(p: Playwright, user_data_dir: str = None, headless: bool = None) -> tuple[BrowserContext, Page]:
     """
     Launches a persistent browser context with stealth settings and auto-detected location.
     
     Args:
         p (Playwright): The Playwright instance.
         user_data_dir (str): Path to the directory for storing user data (cookies, cache).
+                            If None, uses config.CHROME_USER_DATA_DIR.
         headless (bool): Whether to run the browser in headless mode.
+                        If None, uses config.BROWSER_HEADLESS.
         
     Returns:
         tuple[BrowserContext, Page]: The browser context and the first page object.
@@ -40,6 +50,12 @@ def launch_persistent_browser(p: Playwright, user_data_dir: str = "./chrome_user
         - Stealth Mode: Hides automation flags (navigator.webdriver).
         - Auto-Location: Injects the user's real IP-based geolocation to enable "Nearby" features.
     """
+    # Use config values if parameters are not provided
+    if user_data_dir is None:
+        user_data_dir = str(config.get_chrome_user_data_dir())
+    if headless is None:
+        headless = config.BROWSER_HEADLESS
+    
     print(f"Launching browser in persistent mode (User Data: {user_data_dir})...")
     
     # Detect location
@@ -53,7 +69,7 @@ def launch_persistent_browser(p: Playwright, user_data_dir: str = "./chrome_user
             "--disable-blink-features=AutomationControlled", 
             "--start-maximized",
         ],
-        viewport={"width": MAX_WIDTH, "height": MAX_HEIGHT},
+        viewport={"width": config.BROWSER_WIDTH, "height": config.BROWSER_HEIGHT},
         permissions=["geolocation"],
         geolocation=location,
     )

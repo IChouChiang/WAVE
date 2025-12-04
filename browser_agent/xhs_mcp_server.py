@@ -9,6 +9,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from browser_utils import launch_persistent_browser
 from xhs_actions import search_xhs, extract_search_results, extract_post_details, close_post_details, apply_search_filters
+from config import config
 
 # Initialize FastMCP server
 # This server exposes the browser automation tools to any MCP-compatible client (e.g., Claude Desktop, Cursor).
@@ -39,10 +40,10 @@ def launch_browser() -> str:
     
     try:
         state.playwright = sync_playwright().start()
-        state.context, state.page = launch_persistent_browser(state.playwright, user_data_dir="./chrome_user_data")
+        state.context, state.page = launch_persistent_browser(state.playwright)
         
         # Navigate to home to ensure we are ready
-        state.page.goto("https://www.xiaohongshu.com/explore")
+        state.page.goto(config.XHS_EXPLORE_URL)
         return "Browser launched successfully and navigated to XHS Explore page."
     except Exception as e:
         return f"Failed to launch browser: {str(e)}"

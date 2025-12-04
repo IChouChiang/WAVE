@@ -11,11 +11,11 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from browser_utils import launch_persistent_browser
 from xhs_actions import search_xhs, extract_search_results, extract_post_details, close_post_details, apply_search_filters
+from config import config
 
 # --- Configuration ---
-# API Key is loaded from a local file to avoid hardcoding secrets.
-API_KEY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ds_api.txt")
-BASE_URL = "https://api.deepseek.com"
+# API Key is loaded from environment variables or config
+BASE_URL = config.DEEPSEEK_BASE_URL
 MODEL_NAME = "deepseek-reasoner"  # Using Thinking Mode (R1) for complex reasoning
 
 # --- State Management ---
@@ -37,8 +37,8 @@ def launch_browser_tool():
         return "Browser is already running."
     try:
         state.playwright = sync_playwright().start()
-        state.context, state.page = launch_persistent_browser(state.playwright, user_data_dir="./chrome_user_data")
-        state.page.goto("https://www.xiaohongshu.com/explore")
+        state.context, state.page = launch_persistent_browser(state.playwright)
+        state.page.goto(config.XHS_EXPLORE_URL)
         return "Browser launched successfully. You are on the Explore page."
     except Exception as e:
         return f"Failed to launch browser: {str(e)}"
@@ -191,11 +191,11 @@ available_functions = {
 # --- Main Agent Loop ---
 def main():
     # 1. Load API Key
-    try:
-        with open(API_KEY_FILE, "r") as f:
-            api_key = f.read().strip()
-    except FileNotFoundError:
-        print(f"Error: API key file not found at {API_KEY_FILE}")
+    api_key = config.DEEPSEEK_API_KEY
+    if not api_key:
+        print("Error: DeepSeek API key not found.")
+        print("Please set DEEPSEEK_API_KEY in your .env file.")
+        print("Get your API key from: https://platform.deepseek.com/api_keys")
         return
 
     client = OpenAI(api_key=api_key, base_url=BASE_URL)

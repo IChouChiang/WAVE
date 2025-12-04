@@ -1,3 +1,4 @@
 playwright
 mcp
 openai
+python-dotenv

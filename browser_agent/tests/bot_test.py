@@ -9,8 +9,10 @@ import os
 import time
 from playwright.sync_api import sync_playwright
 
+
 # Add parent directory to path to import modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import config
 
 from browser_utils import launch_persistent_browser
 
@@ -20,7 +22,7 @@ def main():
     with sync_playwright() as p:
         try:
             # Launch browser using the utility function
-            context, page = launch_persistent_browser(p, user_data_dir="./chrome_user_data")
+            context, page = launch_persistent_browser(p)
             
             # Navigate to the bot detection test site
             target_url = "https://bot.sannysoft.com/"
