@@ -88,13 +88,66 @@ if (-not (Test-Path ".env")) {
     if (Test-Path ".env.example") {
         Copy-Item .env.example .env
         Write-Success ".env file created from template"
-        Write-Warning "Please edit .env file to add your DeepSeek API key"
+        
+        # Check if ds_api.txt exists and update .env with API key
+        if (Test-Path "ds_api.txt") {
+            Write-Info "Found ds_api.txt, updating .env with API key..."
+            try {
+                $apiKey = Get-Content "ds_api.txt" -Raw -Encoding UTF8
+                $apiKey = $apiKey.Trim()
+                # Remove any JSON metadata that might be appended
+                if ($apiKey.Contains('{')) {
+                    $apiKey = $apiKey.Split('{')[0].Trim()
+                }
+                
+                if ($apiKey -and $apiKey.Length -gt 10) {
+                    # Update .env file with API key
+                    $envContent = Get-Content ".env" -Raw
+                    $envContent = $envContent -replace 'DEEPSEEK_API_KEY=.*', "DEEPSEEK_API_KEY=$apiKey"
+                    Set-Content -Path ".env" -Value $envContent -Encoding UTF8
+                    Write-Success "✓ API key loaded from ds_api.txt and added to .env"
+                } else {
+                    Write-Warning "API key in ds_api.txt appears to be invalid or empty"
+                    Write-Warning "Please edit .env file to add your DeepSeek API key"
+                }
+            } catch {
+                Write-Warning "Could not read API key from ds_api.txt: $_"
+                Write-Warning "Please edit .env file to add your DeepSeek API key"
+            }
+        } else {
+            Write-Warning "Please edit .env file to add your DeepSeek API key"
+            Write-Warning "Or create ds_api.txt file with your API key"
+        }
     } else {
         Write-Error ".env.example not found"
         exit 1
     }
 } else {
     Write-Warning ".env file already exists"
+    # Check if .env has API key, if not try to load from ds_api.txt
+    $envContent = Get-Content ".env" -Raw
+    if (-not ($envContent -match 'DEEPSEEK_API_KEY=\s*[^\s]')) {
+        if (Test-Path "ds_api.txt") {
+            Write-Info "Found ds_api.txt, updating .env with API key..."
+            try {
+                $apiKey = Get-Content "ds_api.txt" -Raw -Encoding UTF8
+                $apiKey = $apiKey.Trim()
+                # Remove any JSON metadata that might be appended
+                if ($apiKey.Contains('{')) {
+                    $apiKey = $apiKey.Split('{')[0].Trim()
+                }
+                
+                if ($apiKey -and $apiKey.Length -gt 10) {
+                    # Update .env file with API key
+                    $envContent = $envContent -replace 'DEEPSEEK_API_KEY=.*', "DEEPSEEK_API_KEY=$apiKey"
+                    Set-Content -Path ".env" -Value $envContent -Encoding UTF8
+                    Write-Success "✓ API key loaded from ds_api.txt and added to .env"
+                }
+            } catch {
+                Write-Warning "Could not read API key from ds_api.txt: $_"
+            }
+        }
+    }
 }
 
 # Create necessary directories

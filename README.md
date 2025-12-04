@@ -1,69 +1,126 @@
-# SNS Agent Frontend
+# WAVE - Web Automation & Visual Editor
 
-This is the visual frontend for the **Xiaohongshu MCP Agent System**. It provides a "Canva-like" interface for designing posts and an AI Assistant chat box.
+**WAVE** is a comprehensive platform for Xiaohongshu (XHS) content automation and creation, combining browser automation with an AI-powered visual editor.
 
-## 📂 Project Structure
+## Project Overview
 
-This project is a **Next.js 16** application using the **App Router**.
+WAVE consists of two main components:
 
-### Core Source Code (`frontend/app/`)
-- **`frontend/app/page.tsx`**: Entry point. Renders the main `AIPostApp`.
-- **`frontend/app/aipost/`**: Contains the core logic for the editor.
-  - **`App.tsx`**: Main application state manager (Canvas elements, Undo/Redo, AI Chat state).
-  - **`components/`**: UI Components.
-    - `Canvas.tsx`: The main drawing area.
-    - `Toolbar.tsx`: Tools for adding text, images, etc.
-    - `AIDialog.tsx`: The chat interface for AI interaction.
-    - `PropertiesPanel.tsx`: Settings for selected elements.
-- **`frontend/app/api/`**: Next.js API Routes. These act as a proxy or mock layer for the AI features.
-  - `api/ai/suggestions`: Endpoint for getting AI prompt suggestions.
-  - `api/ai/apply`: Endpoint for applying AI edits to the canvas.
+1. **Browser Agent** (`browser_agent/`) - Python-based automation for XHS data extraction and interaction
+2. **Visual Frontend** (`frontend/`) - Next.js application for AI-assisted content creation
 
-### Documentation (`frontend/docs/`)
-- **`AI_API.md`**: Detailed specification of the API contract between Frontend and Backend.
-- **`Backend_AI_Integration.md`**: Guide for implementing the Python backend logic.
+### Key Features
+- **Autonomous Browser Agent**: Automated XHS exploration using DeepSeek AI with thinking mode
+- **Canva-like Editor**: Visual interface for designing XHS posts with AI suggestions
+- **MCP Integration**: Model Context Protocol server for LLM tool integration
+- **Cross-Platform**: Works on Windows, macOS, and Linux
+- **Stealth Automation**: Anti-detection browser automation with persistent sessions
 
-### Configuration
-- **`frontend/next.config.ts`**: Next.js configuration.
-- **`frontend/tailwind.config.ts`** (implicit in v4): Styling configuration.
+## Project Structure
 
-## 🔗 Integration
-
-This frontend is designed to work with the **Python Backend (`agent_server.py`)** located in the parent directory.
-
--   **Chat Box**: Sends requests to `http://127.0.0.1:8000/chat`
--   **Publish Button**: Sends requests to `http://127.0.0.1:8000/publish`
-
-## 🚀 Getting Started
-
-### 1. Prerequisites
-Ensure the Python Backend is running first! (See `README.md`)
-
-### 2. Install Dependencies
-```bash
-cd frontend
-npm install
+```
+WAVE/
+├── browser_agent/          # Python automation backend
+│   ├── config.py           # Centralized configuration
+│   ├── browser_utils.py    # Browser initialization
+│   ├── xhs_actions.py      # XHS interaction logic
+│   ├── deepseek_agent.py   # Autonomous AI agent
+│   ├── xhs_mcp_server.py   # MCP server for LLM tools
+│   ├── tests/              # Test scripts
+│   └── README.md           # Detailed setup guide
+├── frontend/               # Next.js visual editor
+│   ├── app/                # Next.js App Router
+│   ├── docs/               # API documentation
+│   └── README.md           # Frontend guide
+└── docs/                   # Project documentation
 ```
 
-### 3. Run Development Server
+## Quick Start
+
+### Option 1: Start with Browser Agent (Recommended)
+The browser agent is the core automation component. Start here to understand the XHS automation capabilities:
+
 ```bash
+# Navigate to browser_agent
+cd browser_agent
+
+# Automated setup (choose based on your OS)
+# Windows:
+.\setup.ps1
+
+# macOS/Linux:
+chmod +x setup.sh
+./setup.sh
+
+# Run the autonomous agent
+python deepseek_agent.py
+```
+
+#### API Key Setup
+The browser agent requires a DeepSeek API key. You have two options:
+
+**Option A: Using ds_api.txt (Recommended for personal use)**
+1. Create a file named `ds_api.txt` in the `browser_agent` directory
+2. Paste your DeepSeek API key into the file (just the key, no extra text)
+3. Run the setup script - it will automatically load the key into `.env`
+
+**Option B: Using .env file (Recommended for team collaboration)**
+1. Copy `.env.example` to `.env`
+2. Edit `.env` and set `DEEPSEEK_API_KEY=your_api_key_here`
+3. Run the setup script
+
+**Get your API key from:** https://platform.deepseek.com/api_keys
+
+**Security Note:** Both `.env` and `ds_api.txt` are excluded from git via `.gitignore`
+
+### Option 2: Start with Visual Frontend
+The frontend provides a visual interface for content creation:
+
+```bash
+# Navigate to frontend
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 🛠️ Tech Stack
--   **Framework**: Next.js 16 (App Router)
--   **UI**: Tailwind CSS, Lucide React
--   **Drag & Drop**: React DnD
--   **Language**: TypeScript
+## Component Integration
 
-## ⚠️ Note
+### Current Integration Status
+- **Frontend → Backend**: Frontend is designed to work with a Python backend on port 8000
+- **Browser Agent**: Standalone automation system with MCP server capabilities
+- **DeepSeek Agent**: Command-line interactive agent for XHS exploration
+
+### Recommended Workflow
+1. **Start with Browser Agent**: Test XHS automation using `deepseek_agent.py`
+2. **Explore MCP Tools**: Run `xhs_mcp_server.py` to expose tools to LLM clients
+3. **Develop Frontend**: Work on the visual editor while backend matures
+
+## Tech Stack
+
+### Browser Agent (Python)
+- **Automation**: Playwright with stealth capabilities
+- **AI Integration**: DeepSeek API with thinking mode
+- **Protocol**: Model Context Protocol (MCP) server
+- **Configuration**: Environment-based with cross-platform support
+
+### Visual Frontend (Next.js)
+- **Framework**: Next.js 16 (App Router)
+- **UI**: Tailwind CSS, Lucide React
+- **Drag & Drop**: React DnD
+- **Language**: TypeScript
+
+## Note
 If the AI Chat or Publish features are not working, check that:
 1.  The Python server is running on port 8000.
 2.  There are no CORS issues (though the Next.js API route proxies requests to avoid this).
 
-## 🚧 Current Placeholders & Mock Data
+## Current Placeholders & Mock Data
 
 The frontend currently contains several placeholders and fallback mechanisms to allow UI testing without a running backend.
 

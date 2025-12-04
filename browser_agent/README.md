@@ -2,7 +2,7 @@
 
 This directory contains scripts for browser automation using Playwright with stealth capabilities, specifically tailored for Xiaohongshu (XHS) data extraction.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Option 1: Automated Setup (Recommended)
 ```bash
@@ -50,7 +50,7 @@ python deepseek_agent.py
 python xhs_mcp_server.py
 ```
 
-## 🐍 Python Environment Setup
+## Python Environment Setup
 
 ### Problem
 After setting up the virtual environment, you might need to use the full path to Python:
@@ -100,7 +100,7 @@ When you're done, deactivate the virtual environment:
 deactivate
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables
 Create a `.env` file in the `browser_agent` directory with the following settings:
@@ -125,11 +125,30 @@ MCP_SERVER_PORT=8000
 ```
 
 ### API Key Setup
-1. Get your DeepSeek API key from: https://platform.deepseek.com/api_keys
-2. Add it to your `.env` file as `DEEPSEEK_API_KEY`
-3. **Important**: Never commit your `.env` file to version control
+The browser agent supports two methods for API key management:
 
-## 📁 Project Structure
+**Method 1: Using ds_api.txt (Recommended for personal use)**
+1. Create a file named `ds_api.txt` in the `browser_agent` directory
+2. Paste your DeepSeek API key into the file (just the key, no extra text)
+3. Run the setup script - it will automatically:
+   - Detect `ds_api.txt`
+   - Load the API key
+   - Update `.env` file with the key
+   - Configure everything automatically
+
+**Method 2: Using .env file (Recommended for team collaboration)**
+1. Copy `.env.example` to `.env`
+2. Edit `.env` and set `DEEPSEEK_API_KEY=your_api_key_here`
+3. Run the setup script
+
+**Get your API key from:** https://platform.deepseek.com/api_keys
+
+**Security Notes:**
+- Both `.env` and `ds_api.txt` are excluded from git via `.gitignore`
+- Never commit these files to version control
+- The system automatically loads API keys from `ds_api.txt` if `.env` doesn't have one
+
+## Project Structure
 
 ```
 browser_agent/
@@ -152,11 +171,14 @@ browser_agent/
 
 *   **`config.py`** - Centralized configuration management using environment variables
 *   **`browser_utils.py`** - Browser initialization with stealth settings and persistent sessions
-*   **`xhs_actions.py`** - Core Xiaohongshu interaction logic (search, extraction, filtering)
+*   **`xhs_actions.py`** - Core Xiaohongshu interaction logic with:
+    - **Robust Extraction**: Scoped selectors using container IDs, data normalization, comment scraping
+    - **Navigation Logic**: Modal handling, input clearing, filter application
+    - **Search & Filtering**: Multi-filter support (Sort, Type, Time, Scope, Location)
 *   **`deepseek_agent.py`** - Autonomous AI agent using DeepSeek API with thinking mode
 *   **`xhs_mcp_server.py`** - MCP server exposing browser tools to LLM clients
 
-## 🛠️ Usage
+## Usage
 
 ### DeepSeek Agent (Autonomous Mode)
 Run the autonomous agent to explore XHS with natural language commands:
@@ -186,7 +208,7 @@ python tests/bot_test.py
 # MCP tool simulation
 python tests/test_mcp_simulation.py
 ```
-## 🌍 Cross-Platform Support
+## Cross-Platform Support
 
 The project is designed to work on Windows, macOS, and Linux. All hardcoded paths have been replaced with configuration variables.
 
@@ -200,7 +222,7 @@ The project is designed to work on Windows, macOS, and Linux. All hardcoded path
 - **`.env.example`**: Example configuration template
 - **`config.py`**: Centralized configuration loader
 
-## 🔧 Development
+## Development
 
 ### Adding New Features
 1. Add configuration variables to `.env.example`
@@ -217,7 +239,13 @@ python -m pytest tests/
 python tests/xhs_search_test.py
 ```
 
-## 🚨 Troubleshooting
+### Developer Notes
+- **Modifying Workflows**: Edit scripts in `tests/` to change search queries or the number of posts to scrape
+- **Adding Actions**: Add new interaction functions to `xhs_actions.py` (e.g., `like_post`, `collect_post`)
+- **Browser Profile**: If you encounter issues, try deleting the `chrome_user_data` folder to reset the browser profile
+- **Configuration**: All paths are configurable via `.env` file for cross-platform compatibility
+
+## Troubleshooting
 
 ### Common Issues
 
@@ -248,7 +276,7 @@ DEBUG=true
 LOG_LEVEL=DEBUG
 ```
 
-## 📞 Support
+## Support
 
 ### Getting Help
 - Check the [troubleshooting section](#-troubleshooting)
@@ -262,26 +290,10 @@ When reporting issues, please include:
 3. Configuration (redacted `.env` file)
 4. Error messages and logs
 
-## 📄 License
+## License
 
 This project is part of the WAVE repository. See the main repository for license information.
 
 ---
 
-**Happy browsing!** 🚀
-
-### 2. Robust Extraction
--   **Scoped Selectors**: Uses specific container IDs (e.g., `#noteContainer`) to avoid scraping unrelated text from the background feed.
--   **Data Normalization**: Automatically converts "赞" (Chinese for "Like") to "0" for consistent integer parsing.
--   **Comment Scraping**: Extracts parent comments and their top replies, handling "0 comments" cases gracefully.
-
-### 3. Navigation Logic
--   **Modal Handling**: Smartly detects the close button or uses the `Escape` key to return to the feed.
--   **Input Clearing**: Checks for and clicks the "clear text" icon before typing new search queries.
--   **Filter Application**: Supports applying multiple filters (Sort, Type, Time, Scope, Location) via the `apply_search_filters` function.
-
-## Developer Notes
-
--   **Modifying the Workflow**: Edit scripts in `tests/` to change search queries or the number of posts to scrape.
--   **Adding Actions**: Add new interaction functions to `xhs_actions.py` (e.g., `like_post`, `collect_post`).
--   **Browser Profile**: If you encounter issues, try deleting the `chrome_user_data` folder to reset the browser profile.
+**Happy browsing!**

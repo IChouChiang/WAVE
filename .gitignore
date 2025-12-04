@@ -41,6 +41,11 @@ venv/
 env/
 chrome_user_data/
 
+# API key files (sensitive data)
+ds_api.txt
+*.key
+*.secret
+
 # vercel
 .vercel
 

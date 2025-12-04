@@ -94,13 +94,64 @@ if [ ! -f ".env" ]; then
     if [ -f ".env.example" ]; then
         cp .env.example .env
         print_success ".env file created from template"
-        print_warning "Please edit .env file to add your DeepSeek API key"
+        
+        # Check if ds_api.txt exists and update .env with API key
+        if [ -f "ds_api.txt" ]; then
+            print_info "Found ds_api.txt, updating .env with API key..."
+            if command -v sed &> /dev/null; then
+                # Read API key from ds_api.txt
+                API_KEY=$(head -n 1 ds_api.txt | tr -d '\r\n' | sed 's/{.*//' | xargs)
+                
+                if [ -n "$API_KEY" ] && [ ${#API_KEY} -gt 10 ]; then
+                    # Update .env file with API key
+                    if [[ "$OSTYPE" == "darwin"* ]]; then
+                        # macOS sed requires different syntax
+                        sed -i '' "s/DEEPSEEK_API_KEY=.*/DEEPSEEK_API_KEY=$API_KEY/" .env
+                    else
+                        # Linux sed
+                        sed -i "s/DEEPSEEK_API_KEY=.*/DEEPSEEK_API_KEY=$API_KEY/" .env
+                    fi
+                    print_success "✓ API key loaded from ds_api.txt and added to .env"
+                else
+                    print_warning "API key in ds_api.txt appears to be invalid or empty"
+                    print_warning "Please edit .env file to add your DeepSeek API key"
+                fi
+            else
+                print_warning "sed command not found, cannot update .env automatically"
+                print_warning "Please edit .env file to add your DeepSeek API key"
+            fi
+        else
+            print_warning "Please edit .env file to add your DeepSeek API key"
+            print_warning "Or create ds_api.txt file with your API key"
+        fi
     else
         print_error ".env.example not found"
         exit 1
     fi
 else
     print_warning ".env file already exists"
+    # Check if .env has API key, if not try to load from ds_api.txt
+    if ! grep -q "DEEPSEEK_API_KEY=\s*[^\s]" .env; then
+        if [ -f "ds_api.txt" ]; then
+            print_info "Found ds_api.txt, updating .env with API key..."
+            if command -v sed &> /dev/null; then
+                # Read API key from ds_api.txt
+                API_KEY=$(head -n 1 ds_api.txt | tr -d '\r\n' | sed 's/{.*//' | xargs)
+                
+                if [ -n "$API_KEY" ] && [ ${#API_KEY} -gt 10 ]; then
+                    # Update .env file with API key
+                    if [[ "$OSTYPE" == "darwin"* ]]; then
+                        # macOS sed requires different syntax
+                        sed -i '' "s/DEEPSEEK_API_KEY=.*/DEEPSEEK_API_KEY=$API_KEY/" .env
+                    else
+                        # Linux sed
+                        sed -i "s/DEEPSEEK_API_KEY=.*/DEEPSEEK_API_KEY=$API_KEY/" .env
+                    fi
+                    print_success "✓ API key loaded from ds_api.txt and added to .env"
+                fi
+            fi
+        fi
+    fi
 fi
 
 # Create necessary directories

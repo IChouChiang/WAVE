@@ -18,6 +18,21 @@ else:
     if parent_env.exists():
         load_dotenv(parent_env)
 
+# Check for ds_api.txt and load API key if .env doesn't have it
+ds_api_path = Path(__file__).parent / 'ds_api.txt'
+if ds_api_path.exists() and not os.getenv('DEEPSEEK_API_KEY'):
+    try:
+        with open(ds_api_path, 'r', encoding='utf-8') as f:
+            api_key = f.read().strip()
+            # Remove any JSON metadata that might be appended
+            if '{' in api_key:
+                api_key = api_key.split('{')[0].strip()
+            if api_key:
+                os.environ['DEEPSEEK_API_KEY'] = api_key
+                print(f"✓ Loaded API key from {ds_api_path.name}")
+    except Exception as e:
+        print(f"⚠️  Warning: Could not read API key from {ds_api_path.name}: {e}")
+
 class Config:
     """Configuration class for Browser Agent."""
     
