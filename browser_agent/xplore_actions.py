@@ -51,3 +51,60 @@ def search_xplore(page: Page, query: str):
     # Wait for search to complete
     time.sleep(3)
     print("Search submitted successfully")
+
+def search_extract_xplore(page: Page) -> str:
+    """
+    Extracts search results information from IEEE Xplore search results page.
+    
+    Args:
+        page (Page): The Playwright page object.
+        
+    Returns:
+        str: A formatted string like: "Showing 1-25 of 26 results for opf NN"
+    """
+    try:
+        # Wait for search results to load
+        page.wait_for_selector("#xplMainContent", timeout=10000)
+        time.sleep(1)
+        
+        # Extract result range (e.g., "1-25")
+        result_range = ""
+        try:
+            range_selector = "#xplMainContent > div.ng-Dashboard > div.col > xpl-search-dashboard > section > div > h1 > span:nth-child(1) > span:nth-child(1)"
+            range_element = page.locator(range_selector).first
+            if range_element.is_visible():
+                result_range = range_element.inner_text().strip()
+        except:
+            pass
+        
+        # Extract total results (e.g., "26")
+        total_results = ""
+        try:
+            total_selector = "#xplMainContent > div.ng-Dashboard > div.col > xpl-search-dashboard > section > div > h1 > span:nth-child(1) > span:nth-child(2)"
+            total_element = page.locator(total_selector).first
+            if total_element.is_visible():
+                total_results = total_element.inner_text().strip()
+        except:
+            pass
+        
+        # Extract search keywords (e.g., "opf NN")
+        search_keywords = ""
+        try:
+            keywords_selector = "#xplMainContent > div.ng-Dashboard > div.col > xpl-search-dashboard > section > div > h1 > span:nth-child(2) > strong > xpl-breadcrumb > div > span > span > span > span"
+            keywords_element = page.locator(keywords_selector).first
+            if keywords_element.is_visible():
+                search_keywords = keywords_element.inner_text().strip()
+        except:
+            pass
+        
+        # Format the output
+        if result_range and total_results:
+            if search_keywords:
+                return f"Showing {result_range} of {total_results} results for {search_keywords}"
+            else:
+                return f"Showing {result_range} of {total_results} results"
+        else:
+            return "No search results information found"
+        
+    except Exception as e:
+        return f"Error extracting search results: {e}"
