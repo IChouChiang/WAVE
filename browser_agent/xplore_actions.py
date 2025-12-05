@@ -52,6 +52,97 @@ def search_xplore(page: Page, query: str):
     time.sleep(3)
     print("Search submitted successfully")
 
+def navigate_to_page_xplore(page: Page, page_number: int) -> str:
+    """
+    导航到 IEEE Xplore 搜索结果中的指定页面。
+    
+    基本功能：
+    1. 如果页面数字合法且存在，导航到该页面并返回成功信息
+    2. 如果页面数字不合法（如0或负数），导航到第1页并返回提醒信息
+    3. 如果页面不存在（越界），导航到第1页并返回提醒信息
+    
+    注意：此函数只负责导航，不提取页面信息。提取信息请使用 search_extract_xplore 函数。
+    
+    Args:
+        page (Page): Playwright 页面对象
+        page_number (int): 要导航到的页码（从1开始）
+        
+    Returns:
+        str: 导航结果信息字符串
+    """
+    try:
+        # 检查是否在搜索结果页面
+        current_url = page.url
+        if "search/searchresult.jsp" not in current_url:
+            return "错误：不在搜索结果页面"
+        
+        # 保存原始页码用于提示
+        original_page = page_number
+        
+        # 处理非法页码（0或负数）
+        if page_number < 1:
+            page_number = 1
+        
+        # 修改URL中的页码参数
+        import re
+        
+        if "pageNumber=" in current_url:
+            new_url = re.sub(r'pageNumber=\d+', f'pageNumber={page_number}', current_url)
+        else:
+            if "?" in current_url:
+                new_url = current_url + f"&pageNumber={page_number}"
+            else:
+                new_url = current_url + f"?pageNumber={page_number}"
+        
+        # 导航到新URL
+        page.goto(new_url)
+        
+        # 等待页面加载
+        try:
+            page.wait_for_load_state("domcontentloaded", timeout=15000)
+        except:
+            pass  # 即使超时也继续
+        
+        time.sleep(2)
+        
+        # 检查是否出现"无结果"消息（页面越界）
+        try:
+            no_results_selector = "#xplMainContent > div.ng-SearchResults.row.g-0 > div.col > xpl-results-list > div > div > p.List-results-none--lg.u-mb-0"
+            no_results_element = page.locator(no_results_selector).first
+            if no_results_element.is_visible():
+                no_results_text = no_results_element.inner_text().strip()
+                if "We were unable to find results for" in no_results_text:
+                    # 页面越界，导航回第1页
+                    if "pageNumber=" in page.url:
+                        page1_url = re.sub(r'pageNumber=\d+', 'pageNumber=1', page.url)
+                    else:
+                        page1_url = page.url + ("&pageNumber=1" if "?" in page.url else "?pageNumber=1")
+                    
+                    page.goto(page1_url)
+                    
+                    try:
+                        page.wait_for_load_state("domcontentloaded", timeout=15000)
+                    except:
+                        pass
+                    
+                    time.sleep(2)
+                    
+                    if original_page < 1:
+                        return f"提示：页码 {original_page} 不合法，已导航到第1页"
+                    else:
+                        return f"提示：第 {original_page} 页不存在（越界），已导航到第1页"
+        except:
+            pass  # 没有"无结果"消息
+        
+        # 正常情况：返回成功信息
+        if original_page < 1:
+            return f"提示：页码 {original_page} 不合法，已导航到第1页"
+        else:
+            return f"成功导航到第 {page_number} 页"
+        
+    except Exception as e:
+        return f"导航到第 {page_number} 页时出错：{e}"
+
 def search_extract_xplore(page: Page, start_index: int = 1, end_index: int = 10) -> str:
     """
     Extracts search results information from IEEE Xplore search results page.
