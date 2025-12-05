@@ -269,3 +269,202 @@ def search_extract_xplore(page: Page, start_index: int = 1, end_index: int = 10)
         
     except Exception as e:
         return f"Error extracting search results: {e}"
+
+def document_page_xplore(page: Page, result_index: int = 1):
+    """
+    Opens an IEEE Xplore document page in a new tab by clicking on a result link.
+    
+    Args:
+        page (Page): The Playwright page object.
+        result_index (int): The 1-based index of the result to open. Default is 1 (first result).
+        
+    Returns:
+        tuple: (new_page, document_url) where new_page is the Page object for the new tab,
+               and document_url is the URL of the opened document.
+               
+    Behavior:
+        1. Finds the result item at the specified index.
+        2. Clicks the document link (opens in new tab).
+        3. Waits for the new tab to load.
+        4. Returns the new page and document URL.
+    """
+    print(f"Opening document at result index {result_index} in new tab...")
+    
+    try:
+        # Wait for results to load
+        page.wait_for_selector("#xplMainContent", timeout=10000)
+        time.sleep(1)
+        
+        # Find all result items
+        result_items = page.locator("#xplMainContent > div.ng-SearchResults.row.g-0 > div.col > xpl-results-list xpl-results-item").all()
+        
+        if not result_items:
+            raise ValueError("No result items found on the page")
+        
+        # Validate index
+        if result_index < 1 or result_index > len(result_items):
+            raise ValueError(f"Result index {result_index} out of range. Available results: {len(result_items)}")
+        
+        # Get the target result item (0-based index)
+        target_item = result_items[result_index - 1]
+        
+        # Find the document link within the result item
+        # Using the selector pattern: #\31 0036606 > xpl-results-item > div.hide-mobile > div.d-flex.result-item > div.col.result-item-align.px-3 > h3 > a
+        # But we need a more generic approach
+        document_link = target_item.locator("h3 a.fw-bold").first
+        
+        if not document_link.is_visible():
+            raise ValueError(f"Document link not visible for result index {result_index}")
+        
+        # Get the href attribute before clicking
+        document_url = document_link.get_attribute("href")
+        if not document_url:
+            raise ValueError("Could not get document URL from link")
+        
+        # Ensure we have the full URL
+        if document_url.startswith("/"):
+            document_url = f"https://ieeexplore.ieee.org{document_url}"
+        
+        print(f"Document URL: {document_url}")
+        
+        # Create a new tab programmatically instead of clicking with modifier
+        # This is more reliable than Control+click
+        print("Creating new tab...")
+        
+        # Create a new page in the same context
+        new_page = page.context.new_page()
+        
+        # Navigate to the document URL
+        print(f"Navigating to document URL in new tab...")
+        new_page.goto(document_url)
+        
+        # Wait for the new page to load with shorter timeout
+        try:
+            new_page.wait_for_load_state("domcontentloaded", timeout=15000)
+        except:
+            print("Warning: Timeout waiting for domcontentloaded, continuing anyway")
+        
+        time.sleep(2)
+        
+        print(f"Successfully opened document in new tab: {new_page.url}")
+        
+        # Verify we have both tabs
+        print(f"Total tabs in context: {len(page.context.pages)}")
+        
+        # Extract document information for LLM-friendly output
+        print("Extracting document information...")
+        document_info = extract_document_info(new_page)
+        
+        return new_page, document_info
+        
+    except Exception as e:
+        print(f"Error opening document: {e}")
+        raise
+
+def extract_document_info(page: Page) -> str:
+    """
+    Extracts document information from an IEEE Xplore document page.
+    
+    Args:
+        page (Page): The Playwright page object (should be on a document page).
+        
+    Returns:
+        str: A formatted string with document title and abstract.
+    """
+    output_lines = []
+    
+    try:
+        # Extract document title
+        title = ""
+        try:
+            # Try the specific selector you provided
+            title_selector = "#xplMainContentLandmark > div > xpl-document-details > div > div.document-main.global-content-width-w-rr > section.document-main-header.row.g-0 > div > xpl-document-header > section > div.document-header-inner-container.row.g-0 > div.document-header-content.col-10 > div > div.row.g-0.document-title-fix > div > div.left-container.w-100 > h1 > span"
+            title_element = page.locator(title_selector).first
+            if title_element.is_visible(timeout=5000):
+                title = title_element.inner_text().strip()
+                print(f"Found title using specific selector: {title[:100]}...")
+        except:
+            pass
+        
+        # If specific selector didn't work, try more generic selectors
+        if not title:
+            try:
+                # Try h1 with class document-title
+                title_element = page.locator("h1.document-title").first
+                if title_element.is_visible(timeout=3000):
+                    title = title_element.inner_text().strip()
+                    print(f"Found title using h1.document-title: {title[:100]}...")
+            except:
+                pass
+        
+        if not title:
+            try:
+                # Try any h1 element
+                title_element = page.locator("h1").first
+                if title_element.is_visible(timeout=3000):
+                    title = title_element.inner_text().strip()
+                    print(f"Found title using h1: {title[:100]}...")
+            except:
+                pass
+        
+        # Extract abstract
+        abstract = ""
+        try:
+            # Try the specific selector you provided
+            abstract_selector = "#xplMainContentLandmark > div > xpl-document-details > div > div.document-main.global-content-width-w-rr > div > div.document-main-content-container.col-19-24 > section > div.document-main-left-trail-content > div > xpl-document-abstract > section > div.abstract-desktop-div.hide-mobile.text-base-md-lh > div.abstract-text.row.g-0 > div > div > h2"
+            abstract_element = page.locator(abstract_selector).first
+            if abstract_element.is_visible(timeout=5000):
+                # Get the parent div that contains the actual abstract text
+                abstract_container = abstract_element.locator("xpath=..").locator("div[xplmathjax]").first
+                if abstract_container.is_visible(timeout=3000):
+                    abstract = abstract_container.inner_text().strip()
+                    print(f"Found abstract using specific selector: {abstract[:100]}...")
+        except:
+            pass
+        
+        # If specific selector didn't work, try more generic selectors
+        if not abstract:
+            try:
+                # Try #abstract element
+                abstract_element = page.locator("#abstract").first
+                if abstract_element.is_visible(timeout=3000):
+                    abstract = abstract_element.inner_text().strip()
+                    print(f"Found abstract using #abstract: {abstract[:100]}...")
+            except:
+                pass
+        
+        if not abstract:
+            try:
+                # Try any element with class containing "abstract"
+                abstract_element = page.locator("[class*='abstract']").first
+                if abstract_element.is_visible(timeout=3000):
+                    abstract = abstract_element.inner_text().strip()
+                    print(f"Found abstract using class*='abstract': {abstract[:100]}...")
+            except:
+                pass
+        
+        # Format the output
+        output_lines.append("=" * 80)
+        output_lines.append("DOCUMENT INFORMATION")
+        output_lines.append("=" * 80)
+        
+        if title:
+            output_lines.append(f"\n**Title:** {title}")
+        else:
+            output_lines.append(f"\n**Title:** Not found")
+        
+        if abstract:
+            # Truncate abstract if too long for LLM context
+            if len(abstract) > 1000:
+                abstract = abstract[:1000] + "... [truncated]"
+            output_lines.append(f"\n**Abstract:** {abstract}")
+        else:
+            output_lines.append(f"\n**Abstract:** Not found")
+        
+        # Add URL for reference
+        output_lines.append(f"\n**URL:** {page.url}")
+        
+        return "\n".join(output_lines)
+        
+    except Exception as e:
+        return f"Error extracting document information: {e}"
