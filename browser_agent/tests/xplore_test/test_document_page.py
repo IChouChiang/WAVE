@@ -23,6 +23,7 @@ def test_document_page_xplore():
     print("=" * 80)
     
     with sync_playwright() as p:
+        context = None
         try:
             # Launch browser in persistent mode
             context, page = launch_persistent_browser(p)
@@ -120,7 +121,8 @@ def test_document_page_xplore():
                 # If running non-interactively, just close
                 pass
             print("Closing browser context...")
-            context.close()
+            if context:
+                context.close()
 
 if __name__ == "__main__":
     test_document_page_xplore()
