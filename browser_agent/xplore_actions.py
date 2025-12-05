@@ -6,19 +6,18 @@ Simple functions for interacting with IEEE Xplore website.
 import time
 from playwright.sync_api import Page
 
-def search_xplore(page: Page, query: str, submit_search: bool = False):
+def search_xplore(page: Page, query: str):
     """
     Performs a search on IEEE Xplore website.
     
     Args:
         page (Page): The Playwright page object.
         query (str): The search keyword.
-        submit_search (bool): Whether to press Enter to submit the search. Default is False.
         
     Behavior:
         1. Locates the search input box using get_by_role method.
         2. Fills the input with the search query.
-        3. Optionally presses 'Enter' to submit the search.
+        3. Clicks the search button to submit the search.
     """
     print(f"Searching IEEE Xplore for: {query}")
     
@@ -35,7 +34,20 @@ def search_xplore(page: Page, query: str, submit_search: bool = False):
     # Fill the input with the search query
     search_input.fill(query)
     
-    # Optionally submit search by pressing Enter
-    if submit_search:
-        search_input.press("Enter")
-        time.sleep(2)  # Wait for search to complete
+    # Click the search button - need to be specific about which "Search" button
+    print("Clicking search button...")
+    
+    # There are multiple buttons with "Search" in the name on results page
+    # We need the main search button with aria-label="Search" (not "Search Within")
+    # Use exact match for the name
+    search_button = page.get_by_role("button", name="Search", exact=True)
+    
+    # Wait for the button to be visible
+    search_button.wait_for(state="visible", timeout=5000)
+    
+    # Click the search button
+    search_button.click()
+    
+    # Wait for search to complete
+    time.sleep(3)
+    print("Search submitted successfully")
