@@ -173,8 +173,6 @@ def apply_search_filters(page: Page, filters: dict):
         except Exception as e:
             print(f"Error applying filter {category}={option}: {e}")
 
-
-
 def extract_search_results(page: Page, max_results: int = 15) -> str:
     """
     Extracts the top N search results (Title and Likes) and returns a Markdown table string.

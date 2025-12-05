@@ -8,7 +8,7 @@ import time
 
 
 # Add parent directory to path to import modules
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from config import config
 
 # Import the tools directly from the server file to simulate calls

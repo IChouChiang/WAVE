@@ -13,7 +13,7 @@ import time
 from playwright.sync_api import sync_playwright
 
 # Add parent directory to path to import modules
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from browser_utils import launch_persistent_browser
 from xhs_actions import search_xhs, extract_search_results, extract_post_details, close_post_details
