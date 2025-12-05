@@ -115,10 +115,41 @@ def search_extract_xplore(page: Page, start_index: int = 1, end_index: int = 10)
         
         # Add summary to output
         if result_range and total_results:
-            if search_keywords:
-                output_lines.append(f"Showing {result_range} of {total_results} results for {search_keywords}")
-            else:
-                output_lines.append(f"Showing {result_range} of {total_results} results")
+            # Try to parse total_results as integer (remove commas)
+            try:
+                total_int = int(total_results.replace(',', ''))
+                # Each page shows up to 25 results
+                total_pages = (total_int + 24) // 25  # ceil division
+                
+                # Detect current page from pagination UI
+                current_page = 1  # default
+                try:
+                    # Look for active pagination button with class containing "active"
+                    pagination_selector = "#xplMainContent > div.ng-SearchResults.row.g-0 > div.col > xpl-paginator > div.pagination-bar.hide-mobile.text-base-md-lh > ul"
+                    pagination_list = page.locator(pagination_selector).first
+                    if pagination_list.is_visible():
+                        # Find the active button
+                        active_button = pagination_list.locator("button.active").first
+                        if active_button.is_visible():
+                            page_text = active_button.inner_text().strip()
+                            if page_text.isdigit():
+                                current_page = int(page_text)
+                                print(f"Detected current page from pagination: {current_page}")
+                except:
+                    pass  # Keep default page 1 if detection fails
+                
+                if search_keywords:
+                    output_lines.append(f"Showing {result_range} of {total_results} results for {search_keywords}")
+                    output_lines.append(f"Page {current_page} of {total_pages} (up to 25 results per page)")
+                else:
+                    output_lines.append(f"Showing {result_range} of {total_results} results")
+                    output_lines.append(f"Page {current_page} of {total_pages} (up to 25 results per page)")
+            except ValueError:
+                # If we can't parse total_results as integer, fall back to simple output
+                if search_keywords:
+                    output_lines.append(f"Showing {result_range} of {total_results} results for {search_keywords}")
+                else:
+                    output_lines.append(f"Showing {result_range} of {total_results} results")
         else:
             output_lines.append("No search results information found")
         
