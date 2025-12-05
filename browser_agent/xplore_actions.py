@@ -351,120 +351,98 @@ def document_page_xplore(page: Page, result_index: int = 1):
         # Verify we have both tabs
         print(f"Total tabs in context: {len(page.context.pages)}")
         
-        # Extract document information for LLM-friendly output
-        print("Extracting document information...")
-        document_info = extract_document_info(new_page)
-        
+        # Extract document information for LLM-friendly output (inline)
+        print("Extracting document information in new tab...")
+        output_lines = []
+        try:
+            # Extract document title
+            title = ""
+            try:
+                title_selector = "#xplMainContentLandmark > div > xpl-document-details > div > div.document-main.global-content-width-w-rr > section.document-main-header.row.g-0 > div > xpl-document-header > section > div.document-header-inner-container.row.g-0 > div.document-header-content.col-10 > div > div.row.g-0.document-title-fix > div > div.left-container.w-100 > h1 > span"
+                title_element = new_page.locator(title_selector).first
+                if title_element.is_visible(timeout=5000):
+                    title = title_element.inner_text().strip()
+                    print(f"Found title using specific selector: {title[:100]}...")
+            except:
+                pass
+
+            if not title:
+                try:
+                    title_element = new_page.locator("h1.document-title").first
+                    if title_element.is_visible(timeout=3000):
+                        title = title_element.inner_text().strip()
+                        print(f"Found title using h1.document-title: {title[:100]}...")
+                except:
+                    pass
+
+            if not title:
+                try:
+                    title_element = new_page.locator("h1").first
+                    if title_element.is_visible(timeout=3000):
+                        title = title_element.inner_text().strip()
+                        print(f"Found title using h1: {title[:100]}...")
+                except:
+                    pass
+
+            # Extract abstract
+            abstract = ""
+            try:
+                abstract_selector = "#xplMainContentLandmark > div > xpl-document-details > div > div.document-main.global-content-width-w-rr > div > div.document-main-content-container.col-19-24 > section > div.document-main-left-trail-content > div > xpl-document-abstract > section > div.abstract-desktop-div.hide-mobile.text-base-md-lh > div.abstract-text.row.g-0 > div > div > h2"
+                abstract_element = new_page.locator(abstract_selector).first
+                if abstract_element.is_visible(timeout=5000):
+                    abstract_container = abstract_element.locator("xpath=..").locator("div[xplmathjax]").first
+                    if abstract_container.is_visible(timeout=3000):
+                        abstract = abstract_container.inner_text().strip()
+                        print(f"Found abstract using specific selector: {abstract[:100]}...")
+            except:
+                pass
+
+            if not abstract:
+                try:
+                    abstract_element = new_page.locator("#abstract").first
+                    if abstract_element.is_visible(timeout=3000):
+                        abstract = abstract_element.inner_text().strip()
+                        print(f"Found abstract using #abstract: {abstract[:100]}...")
+                except:
+                    pass
+
+            if not abstract:
+                try:
+                    abstract_element = new_page.locator("[class*='abstract']").first
+                    if abstract_element.is_visible(timeout=3000):
+                        abstract = abstract_element.inner_text().strip()
+                        print(f"Found abstract using class*='abstract': {abstract[:100]}...")
+                except:
+                    pass
+
+            # Keep full abstract (no truncation) — embeddings/LLM downstream will manage size
+            short_abstract = abstract
+
+            # Compose output
+            output_lines.append("=" * 80)
+            output_lines.append("DOCUMENT INFORMATION")
+            output_lines.append("=" * 80)
+            if title:
+                output_lines.append(f"\n**Title:** {title}")
+            else:
+                output_lines.append(f"\n**Title:** Not found")
+
+            if short_abstract:
+                output_lines.append(f"\n**Abstract:** {short_abstract}")
+            else:
+                output_lines.append(f"\n**Abstract:** Not found")
+
+            # URL
+            output_lines.append(f"\n**URL:** {new_page.url}")
+
+            document_info = "\n".join(output_lines)
+        except Exception as e:
+            document_info = f"Error extracting document information: {e}"
+
         return new_page, document_info
         
     except Exception as e:
         print(f"Error opening document: {e}")
         raise
 
-def extract_document_info(page: Page) -> str:
-    """
-    Extracts document information from an IEEE Xplore document page.
-    
-    Args:
-        page (Page): The Playwright page object (should be on a document page).
-        
-    Returns:
-        str: A formatted string with document title and abstract.
-    """
-    output_lines = []
-    
-    try:
-        # Extract document title
-        title = ""
-        try:
-            # Try the specific selector you provided
-            title_selector = "#xplMainContentLandmark > div > xpl-document-details > div > div.document-main.global-content-width-w-rr > section.document-main-header.row.g-0 > div > xpl-document-header > section > div.document-header-inner-container.row.g-0 > div.document-header-content.col-10 > div > div.row.g-0.document-title-fix > div > div.left-container.w-100 > h1 > span"
-            title_element = page.locator(title_selector).first
-            if title_element.is_visible(timeout=5000):
-                title = title_element.inner_text().strip()
-                print(f"Found title using specific selector: {title[:100]}...")
-        except:
-            pass
-        
-        # If specific selector didn't work, try more generic selectors
-        if not title:
-            try:
-                # Try h1 with class document-title
-                title_element = page.locator("h1.document-title").first
-                if title_element.is_visible(timeout=3000):
-                    title = title_element.inner_text().strip()
-                    print(f"Found title using h1.document-title: {title[:100]}...")
-            except:
-                pass
-        
-        if not title:
-            try:
-                # Try any h1 element
-                title_element = page.locator("h1").first
-                if title_element.is_visible(timeout=3000):
-                    title = title_element.inner_text().strip()
-                    print(f"Found title using h1: {title[:100]}...")
-            except:
-                pass
-        
-        # Extract abstract
-        abstract = ""
-        try:
-            # Try the specific selector you provided
-            abstract_selector = "#xplMainContentLandmark > div > xpl-document-details > div > div.document-main.global-content-width-w-rr > div > div.document-main-content-container.col-19-24 > section > div.document-main-left-trail-content > div > xpl-document-abstract > section > div.abstract-desktop-div.hide-mobile.text-base-md-lh > div.abstract-text.row.g-0 > div > div > h2"
-            abstract_element = page.locator(abstract_selector).first
-            if abstract_element.is_visible(timeout=5000):
-                # Get the parent div that contains the actual abstract text
-                abstract_container = abstract_element.locator("xpath=..").locator("div[xplmathjax]").first
-                if abstract_container.is_visible(timeout=3000):
-                    abstract = abstract_container.inner_text().strip()
-                    print(f"Found abstract using specific selector: {abstract[:100]}...")
-        except:
-            pass
-        
-        # If specific selector didn't work, try more generic selectors
-        if not abstract:
-            try:
-                # Try #abstract element
-                abstract_element = page.locator("#abstract").first
-                if abstract_element.is_visible(timeout=3000):
-                    abstract = abstract_element.inner_text().strip()
-                    print(f"Found abstract using #abstract: {abstract[:100]}...")
-            except:
-                pass
-        
-        if not abstract:
-            try:
-                # Try any element with class containing "abstract"
-                abstract_element = page.locator("[class*='abstract']").first
-                if abstract_element.is_visible(timeout=3000):
-                    abstract = abstract_element.inner_text().strip()
-                    print(f"Found abstract using class*='abstract': {abstract[:100]}...")
-            except:
-                pass
-        
-        # Format the output
-        output_lines.append("=" * 80)
-        output_lines.append("DOCUMENT INFORMATION")
-        output_lines.append("=" * 80)
-        
-        if title:
-            output_lines.append(f"\n**Title:** {title}")
-        else:
-            output_lines.append(f"\n**Title:** Not found")
-        
-        if abstract:
-            # Truncate abstract if too long for LLM context
-            if len(abstract) > 1000:
-                abstract = abstract[:1000] + "... [truncated]"
-            output_lines.append(f"\n**Abstract:** {abstract}")
-        else:
-            output_lines.append(f"\n**Abstract:** Not found")
-        
-        # Add URL for reference
-        output_lines.append(f"\n**URL:** {page.url}")
-        
-        return "\n".join(output_lines)
-        
-    except Exception as e:
-        return f"Error extracting document information: {e}"
+# Note: extract_document_info inlined into document_page_xplore; separate function removed.

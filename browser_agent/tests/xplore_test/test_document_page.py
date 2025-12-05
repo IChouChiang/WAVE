@@ -30,7 +30,7 @@ def test_document_page_xplore():
             # Navigate to IEEE Xplore
             print("\n1. Navigating to IEEE Xplore...")
             page.goto("https://ieeexplore.ieee.org/Xplore/home.jsp")
-            page.wait_for_load_state("domcontentloaded")
+            page.wait_for_load_state("networkidle")
             time.sleep(3)  # Give more time for initial load
             
             # Perform search
@@ -39,7 +39,8 @@ def test_document_page_xplore():
             search_xplore(page, search_query)
             
             # Wait for results with more tolerance
-            time.sleep(5)  # Give more time for search results
+            page.wait_for_load_state("networkidle")
+            time.sleep(6)  # Give more time for search results
             
             # Extract some results first to see what we have
             print("\n3. Extracting first 3 results:")
@@ -95,20 +96,12 @@ def test_document_page_xplore():
                 print(f"    Tab 1 (Search Results): {page.url[:80]}...")
                 print(f"    Tab 2 (Document): {new_page.url[:80]}...")
                 
-                # Wait for user to see both tabs
+                # Wait briefly so the document tab finishes loading
                 time.sleep(2)
-                
-                # Close the document tab
-                print("\nClosing document tab...")
-                new_page.close()
-                
-                # Verify tab count
-                tabs_final = len(context.pages)
-                print(f"Tabs after closing document: {tabs_final}")
-                
+
             except Exception as e:
                 print(f"✗ Failed to open document: {e}")
-            
+
             print("\n" + "=" * 80)
             print("TEST SUMMARY")
             print("=" * 80)
@@ -118,10 +111,15 @@ def test_document_page_xplore():
             print("✓ Document page loading verified")
             print("✓ Multiple tabs management working")
             print("✓ Document information extraction working")
-            
+
         finally:
-            # Close browser
-            input("\nPress Enter to close browser and complete test...")
+            # Keep browser open and wait for user to close (interactive)
+            try:
+                input("\nPress Enter to close browser and complete test...")
+            except Exception:
+                # If running non-interactively, just close
+                pass
+            print("Closing browser context...")
             context.close()
 
 if __name__ == "__main__":
