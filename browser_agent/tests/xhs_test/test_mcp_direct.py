@@ -6,7 +6,7 @@ import time
 
 # Add parent directory to path to import modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from config import config
+from config import settings as config
 
 # Import the functions directly from the MCP server file
 # Note: This will execute the module-level code in xhs_mcp_server.py, 

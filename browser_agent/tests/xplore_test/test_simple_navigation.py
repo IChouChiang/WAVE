@@ -10,7 +10,7 @@ from playwright.sync_api import sync_playwright
 
 # 添加父目录到路径以导入模块
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from config import config
+from config import settings as config
 from browser_utils import launch_persistent_browser
 from xplore_actions import search_xplore, navigate_to_page_xplore, search_extract_xplore
 

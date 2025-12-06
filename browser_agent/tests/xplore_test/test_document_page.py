@@ -10,7 +10,7 @@ from playwright.sync_api import sync_playwright
 
 # Add parent directory to path to import modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from config import config
+from config import settings as config
 from browser_utils import launch_persistent_browser
 from xplore_actions import search_xplore, search_extract_xplore, document_page_xplore
 

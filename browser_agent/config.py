@@ -124,12 +124,12 @@ class Config:
         print("=" * 60)
 
 # Create global config instance
-config = Config()
+settings = Config()
 
 if __name__ == "__main__":
     # Test configuration
-    config.print_summary()
-    if config.validate():
+    settings.print_summary()
+    if settings.validate():
         print("✓ Configuration is valid")
     else:
         print("✗ Configuration has errors")

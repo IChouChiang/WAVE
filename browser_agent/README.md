@@ -1,6 +1,12 @@
 # Browser Agent
 
-This directory contains scripts for browser automation using Playwright with stealth capabilities, specifically tailored for Xiaohongshu (XHS) data extraction.
+This directory contains scripts for browser automation using Playwright with stealth capabilities, specifically tailored for Xiaohongshu (XHS) data extraction and IEEE Xplore academic research.
+
+## Key Features
+- **Xiaohongshu (XHS) Automation**: Search, filter, and extract post details.
+- **IEEE Xplore Automation**: Search for academic papers and download PDFs (bypassing anti-bot protections).
+- **DeepSeek AI Integration**: Autonomous agent capabilities using DeepSeek's reasoning models.
+- **MCP Server**: Exposes automation tools via the Model Context Protocol.
 
 ## Quick Start
 
@@ -40,8 +46,11 @@ cp .env.example .env
 
 ### 3. Run Tests
 ```bash
-# Test browser automation
+# Test browser automation (XHS)
 python tests/xhs_search_test.py
+
+# Test IEEE Xplore PDF download
+python tests/xplore_test/test_pdf_download.py
 
 # Test DeepSeek agent (requires API key)
 python deepseek_agent.py

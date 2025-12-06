@@ -11,6 +11,7 @@ WAVE consists of two main components:
 
 ### Key Features
 - **Autonomous Browser Agent**: Automated XHS exploration using DeepSeek AI with thinking mode
+- **IEEE Xplore Integration**: Automated academic paper search and PDF download with anti-bot evasion
 - **Canva-like Editor**: Visual interface for designing XHS posts with AI suggestions
 - **MCP Integration**: Model Context Protocol server for LLM tool integration
 - **Cross-Platform**: Works on Windows, macOS, and Linux
@@ -24,6 +25,7 @@ WAVE/
 │   ├── config.py           # Centralized configuration
 │   ├── browser_utils.py    # Browser initialization
 │   ├── xhs_actions.py      # XHS interaction logic
+│   ├── xplore_actions.py   # IEEE Xplore interaction logic
 │   ├── deepseek_agent.py   # Autonomous AI agent
 │   ├── xhs_mcp_server.py   # MCP server for LLM tools
 │   ├── tests/              # Test scripts

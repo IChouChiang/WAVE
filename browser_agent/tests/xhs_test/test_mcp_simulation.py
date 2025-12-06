@@ -9,7 +9,7 @@ import time
 
 # Add parent directory to path to import modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from config import config
+from config import settings as config
 
 # Import the tools directly from the server file to simulate calls
 # In a real scenario, an MCP client would call these over a protocol.

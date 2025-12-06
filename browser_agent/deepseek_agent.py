@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from browser_utils import launch_persistent_browser
 from xhs_actions import search_xhs, extract_search_results, extract_post_details, close_post_details, apply_search_filters
-from config import config
+from config import settings as config
 
 # --- Configuration ---
 # API Key is loaded from environment variables or config

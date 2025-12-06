@@ -11,12 +11,7 @@ from playwright.sync_api import Page
 
 # Add current directory to path for config import
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-try:
-    from config import config
-except ImportError:
-    # Fallback for direct execution
-    import config
-    config = config.config
+from config import settings as config
 
 def search_xplore(page: Page, query: str):
     """
@@ -681,11 +676,12 @@ def document_download_xplore(page: Page) -> str:
                 print(f"Found PDF iframe source: {pdf_src}")
                 
                 # The src might be relative or absolute, ensure it's absolute
-                if pdf_src.startswith("/"):
+                if pdf_src and pdf_src.startswith("/"):
                     pdf_src = f"https://ieeexplore.ieee.org{pdf_src}"
                 
-                # Download the actual PDF content
-                print("Downloading PDF content from iframe source...")
+                if pdf_src:
+                    # Download the actual PDF content
+                    print("Downloading PDF content from iframe source...")
                 
                 # Note: getPDF.jsp returns the PDF bytes directly
                 # We need to use the browser's context to make the request, but sometimes

@@ -13,7 +13,7 @@ sys.path.append(browser_agent_dir)
 try:
     from browser_utils import launch_persistent_browser
     from xplore_actions import search_xplore, document_page_xplore, document_download_xplore
-    from config import config
+    from config import settings as config
 except ImportError as e:
     print(f"Import Error: {e}")
     print(f"Current sys.path: {sys.path}")

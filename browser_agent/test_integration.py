@@ -13,7 +13,7 @@ def test_config():
     # Temporarily set environment variable for testing
     os.environ['DEEPSEEK_API_KEY'] = 'test_key_for_validation'
     
-    from config import config
+    from config import settings as config
     
     print(f"✓ Project root: {config.PROJECT_ROOT}")
     print(f"✓ Chrome user data dir: {config.get_chrome_user_data_dir()}")

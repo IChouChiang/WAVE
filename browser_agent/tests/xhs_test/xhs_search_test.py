@@ -27,7 +27,7 @@ def main():
             context, page = launch_persistent_browser(p)
             
             # 1. Navigate to Explore page
-            from config import config
+            from config import settings as config
             url = config.XHS_EXPLORE_URL
             print(f"Navigating to {url}...")
             page.goto(url)
