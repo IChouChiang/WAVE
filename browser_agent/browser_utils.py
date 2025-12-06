@@ -62,19 +62,53 @@ def launch_persistent_browser(p: Playwright, user_data_dir: str = None, headless
     location = get_ip_location()
     print(f"Using location: {location}")
 
-    context = p.chromium.launch_persistent_context(
-        user_data_dir,
-        headless=headless,
-        args=[
+    # Ensure downloads directory exists
+    downloads_path = config.PROJECT_ROOT / config.DOWNLOADS_DIR
+    if not downloads_path.exists():
+        downloads_path.mkdir(parents=True, exist_ok=True)
+    print(f"Downloads directory: {downloads_path}")
+
+    launch_args = {
+        "user_data_dir": user_data_dir,
+        "headless": headless,
+        "args": [
             "--disable-blink-features=AutomationControlled", 
             "--start-maximized",
         ],
-        viewport={"width": config.BROWSER_WIDTH, "height": config.BROWSER_HEIGHT},
-        permissions=["geolocation"],
-        geolocation=location,
-    )
+        "viewport": {"width": config.BROWSER_WIDTH, "height": config.BROWSER_HEIGHT},
+        "permissions": ["geolocation"],
+        "geolocation": location,
+        "accept_downloads": True,
+        "downloads_path": str(downloads_path), # Set default download path
+    }
+
+    # Use custom executable path if provided in config
+    if config.CHROME_EXECUTABLE_PATH:
+        print(f"Using custom browser executable: {config.CHROME_EXECUTABLE_PATH}")
+        launch_args["executable_path"] = config.CHROME_EXECUTABLE_PATH
+        launch_args["channel"] = "chrome" # Hint to use chrome channel if path is provided
+
+    context = p.chromium.launch_persistent_context(**launch_args)
+    
+    # Define download handler to save files with correct names
+    def handle_download(download):
+        print(f"Download started: {download.suggested_filename}")
+        try:
+            # Wait for the download to complete
+            # Save to the configured downloads directory with the suggested filename
+            file_path = downloads_path / download.suggested_filename
+            download.save_as(file_path)
+            print(f"✓ Download complete: {file_path}")
+        except Exception as e:
+            print(f"❌ Download failed: {e}")
+
+    # Attach download handler to all pages
+    context.on("page", lambda page: page.on("download", handle_download))
     
     page = context.pages[0] if context.pages else context.new_page()
+    
+    # Attach to the initial page as well
+    page.on("download", handle_download)
     
     # Apply stealth settings
     print("Applying manual stealth settings...")

@@ -46,8 +46,13 @@ class Config:
     
     # Browser Configuration
     CHROME_USER_DATA_DIR: Path = Path(os.getenv('CHROME_USER_DATA_DIR', './chrome_user_data'))
+    CHROME_EXECUTABLE_PATH: Optional[str] = os.getenv('CHROME_EXECUTABLE_PATH')
     BROWSER_HEADLESS: bool = os.getenv('BROWSER_HEADLESS', 'false').lower() == 'true'
     BROWSER_WIDTH: int = int(os.getenv('BROWSER_WIDTH', '1440'))
+    BROWSER_HEIGHT: int = int(os.getenv('BROWSER_HEIGHT', '900'))
+    
+    # Downloads Configuration
+    DOWNLOADS_DIR: Path = Path(os.getenv('DOWNLOADS_DIR', './downloads'))
     BROWSER_HEIGHT: int = int(os.getenv('BROWSER_HEIGHT', '800'))
     
     # Xiaohongshu Configuration

@@ -46,6 +46,9 @@ ds_api.txt
 *.key
 *.secret
 
+# Downloads
+browser_agent/downloads/
+
 # vercel
 .vercel
 

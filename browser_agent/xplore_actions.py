@@ -4,7 +4,19 @@ Simple functions for interacting with IEEE Xplore website.
 """
 
 import time
+import os
+import sys
+from pathlib import Path
 from playwright.sync_api import Page
+
+# Add current directory to path for config import
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+try:
+    from config import config
+except ImportError:
+    # Fallback for direct execution
+    import config
+    config = config.config
 
 def search_xplore(page: Page, query: str):
     """
@@ -568,3 +580,164 @@ def document_page_xplore(page: Page, result_index: int = 1):
         raise
 
 # Note: extract_document_info inlined into document_page_xplore; separate function removed.
+
+def document_download_xplore(page: Page) -> str:
+    """
+    Downloads the PDF from an IEEE Xplore document page.
+    Handles both direct downloads and the 'stamp.jsp' wrapper page.
+    
+    Args:
+        page (Page): The Playwright page object (must be on a document page).
+        
+    Returns:
+        str: Status message indicating the result of the action.
+    """
+    print("Attempting to access PDF...")
+    
+    try:
+        # User provided selector for the PDF button
+        pdf_selector = "#xplMainContentLandmark > div > xpl-document-details > div > div.document-main.global-content-width-w-rr > section.document-main-header.row.g-0 > div > xpl-document-header > section > div.document-header-inner-container.row.g-0 > div > div > div.row.g-0.document-title-fix > div > div.left-container.w-100 > div > div.black-tooltip.tool-tip-pdf-button > div > xpl-login-modal-trigger > a"
+        
+        pdf_button = page.locator(pdf_selector).first
+        
+        # Fallback: try finding by class if the specific selector fails
+        if not pdf_button.is_visible():
+            print("Specific selector not visible, trying generic class selector...")
+            pdf_button = page.locator("a.xpl-btn-pdf").first
+            
+        if not pdf_button.is_visible():
+            return "Error: PDF button not found on this page."
+            
+        # Get href
+        pdf_href = pdf_button.get_attribute("href")
+        if not pdf_href:
+            return "Error: PDF button has no href attribute."
+            
+        if pdf_href.startswith("/"):
+            pdf_href = f"https://ieeexplore.ieee.org{pdf_href}"
+            
+        print(f"Found PDF Wrapper URL: {pdf_href}")
+        
+        # Generate filename base
+        import re
+        arnumber_match = re.search(r'arnumber=(\d+)', pdf_href)
+        if arnumber_match:
+            filename = f"IEEE_Paper_{arnumber_match.group(1)}.pdf"
+        else:
+            filename = f"IEEE_Paper_{int(time.time())}.pdf"
+            
+        # Ensure downloads directory exists
+        downloads_path = config.PROJECT_ROOT / config.DOWNLOADS_DIR
+        if not downloads_path.exists():
+            downloads_path.mkdir(parents=True, exist_ok=True)
+            
+        save_path = downloads_path / filename
+        
+        # Strategy: Open in new tab and handle potential download or iframe
+        print("Opening PDF wrapper in new tab...")
+        new_page = page.context.new_page()
+        
+        # Variable to track if download occurred via event
+        download_captured = {"status": False, "path": ""}
+        
+        def on_download(download):
+            print(f"Download event detected: {download.suggested_filename}")
+            try:
+                download.save_as(save_path)
+                download_captured["status"] = True
+                download_captured["path"] = str(save_path)
+                print(f"✓ Download saved to: {save_path}")
+            except Exception as e:
+                print(f"Download save failed: {e}")
+
+        new_page.on("download", on_download)
+        
+        # Navigate
+        try:
+            new_page.goto(pdf_href)
+            new_page.wait_for_load_state("domcontentloaded", timeout=15000)
+        except Exception as e:
+            print(f"Navigation warning: {e}")
+            
+        # Wait a moment for download event to trigger
+        time.sleep(5)
+        
+        if download_captured["status"]:
+            new_page.close()
+            return f"Success: PDF downloaded via browser event to {download_captured['path']}"
+            
+        # If no download event, check for iframe (common in IEEE Xplore stamp.jsp)
+        print("No direct download detected. Checking for PDF iframe...")
+        
+        try:
+            # Based on the provided HTML, the iframe is:
+            # <iframe src="https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&amp;arnumber=11233474&amp;ref=" frameborder="0"></iframe>
+            
+            # Look for the specific getPDF.jsp iframe
+            iframe = new_page.locator("iframe[src*='getPDF.jsp']").first
+            
+            if iframe.is_visible(timeout=5000):
+                pdf_src = iframe.get_attribute("src")
+                print(f"Found PDF iframe source: {pdf_src}")
+                
+                # The src might be relative or absolute, ensure it's absolute
+                if pdf_src.startswith("/"):
+                    pdf_src = f"https://ieeexplore.ieee.org{pdf_src}"
+                
+                # Download the actual PDF content
+                print("Downloading PDF content from iframe source...")
+                
+                # Note: getPDF.jsp returns the PDF bytes directly
+                # We need to use the browser's context to make the request, but sometimes
+                # the server closes the connection if the TLS handshake fails or if it detects automation.
+                # We'll try to use the page.evaluate to fetch the blob and return it to Python.
+                
+                print("Attempting to fetch PDF via page context (fetch API)...")
+                
+                # Use JavaScript fetch within the page context to get the blob
+                # This uses the exact same session/cookies/TLS context as the page itself
+                pdf_data_b64 = new_page.evaluate(f"""
+                    async () => {{
+                        const response = await fetch("{pdf_src}");
+                        if (!response.ok) throw new Error("Fetch failed: " + response.status);
+                        const blob = await response.blob();
+                        return new Promise((resolve, reject) => {{
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                            reader.onerror = reject;
+                            reader.readAsDataURL(blob);
+                        }});
+                    }}
+                """)
+                
+                if pdf_data_b64:
+                    import base64
+                    pdf_bytes = base64.b64decode(pdf_data_b64)
+                    with open(save_path, "wb") as f:
+                        f.write(pdf_bytes)
+                    new_page.close()
+                    return f"Success: PDF extracted via JS fetch and saved to {save_path}"
+                else:
+                    print("Failed to get PDF data via JS fetch.")
+            else:
+                print("Specific getPDF.jsp iframe not found.")
+                            
+        except Exception as e:
+            print(f"Error checking iframe: {e}")
+            
+        # Final fallback: Check if the URL itself redirected to a PDF
+        if new_page.url.endswith(".pdf"):
+             print("Page URL ends with .pdf, attempting to save response...")
+             # This is tricky if it's already loaded, but we can try request.get on the current URL
+             response = new_page.request.get(new_page.url)
+             if response.status == 200:
+                with open(save_path, "wb") as f:
+                    f.write(response.body())
+                new_page.close()
+                return f"Success: PDF saved from direct URL to {save_path}"
+
+        # Leave the page open if we failed, for debugging
+        return "Warning: Opened PDF page but could not automatically download the file. Please check the new tab."
+
+    except Exception as e:
+        return f"Error accessing PDF: {e}"
