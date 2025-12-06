@@ -161,7 +161,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_results",
-            "description": "Extracts a list of papers from the current search results page.",
+            "description": "Extracts a list of papers from the current page. RESTRICTION: Only works on Search Results pages.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -190,7 +190,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "open_document",
-            "description": "Opens a specific paper in a new tab to view details.",
+            "description": "Opens a paper in a NEW tab. You must switch to the new tab to read/download it.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -204,7 +204,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "download_paper",
-            "description": "Downloads the PDF of the currently viewed paper.",
+            "description": "Downloads the PDF. RESTRICTION: Only works on Document Detail pages (not search results).",
             "parameters": {"type": "object", "properties": {}, "required": []}
         }
     },
@@ -212,7 +212,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "list_tabs",
-            "description": "Lists all open browser tabs.",
+            "description": "Lists all open browser tabs. Use this to find valid indices for switching/closing.",
             "parameters": {"type": "object", "properties": {}, "required": []}
         }
     },
@@ -220,7 +220,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "switch_tab",
-            "description": "Switches focus to a specific tab.",
+            "description": "Switches focus to a tab. Tabs are 0-indexed. Use list_tabs() to check valid indices.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -234,7 +234,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "close_tab",
-            "description": "Closes a specific tab.",
+            "description": "Closes a tab. ADVICE: Close document tabs after downloading or if irrelevant to keep browser clean.",
             "parameters": {
                 "type": "object",
                 "properties": {

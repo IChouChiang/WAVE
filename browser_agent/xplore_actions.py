@@ -166,6 +166,10 @@ def search_extract_xplore(page: Page, start_index: int = 1, end_index: int = 10)
     output_lines = []
     
     try:
+        # URL Validation: Ensure we are on a search results page
+        if "search/searchresult.jsp" not in page.url:
+            return f"Error: Current page (URL: {page.url}) is not a search result page. This action is only allowed on a search result page. Please switch to the correct tab."
+
         # Validate parameters
         if start_index < 1:
             return "start_index must be greater than 0"
@@ -548,9 +552,7 @@ def document_page_xplore(page: Page, result_index: int = 1):
             short_abstract = abstract
 
             # Compose output
-            output_lines.append("=" * 80)
-            output_lines.append("DOCUMENT INFORMATION")
-            output_lines.append("=" * 80)
+            output_lines.append("### DOCUMENT INFORMATION")
             if title:
                 output_lines.append(f"\n**Title:** {title}")
             else:
@@ -590,6 +592,11 @@ def document_download_xplore(page: Page) -> str:
     print("Attempting to access PDF...")
     
     try:
+        # URL Validation: Ensure we are on a document page or PDF wrapper
+        valid_patterns = ["/document/", "/stamp/stamp.jsp", ".pdf"]
+        if not any(p in page.url for p in valid_patterns):
+            return f"Error: Current page (URL: {page.url}) is not a document page. This action is only allowed on a document page. Please switch to the correct tab."
+
         # User provided selector for the PDF button
         pdf_selector = "#xplMainContentLandmark > div > xpl-document-details > div > div.document-main.global-content-width-w-rr > section.document-main-header.row.g-0 > div > xpl-document-header > section > div.document-header-inner-container.row.g-0 > div > div > div.row.g-0.document-title-fix > div > div.left-container.w-100 > div > div.black-tooltip.tool-tip-pdf-button > div > xpl-login-modal-trigger > a"
         

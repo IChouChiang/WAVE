@@ -67,7 +67,8 @@ def search(query: str) -> str:
 @mcp.tool()
 def get_search_results(start_index: int = 1, end_index: int = 10) -> str:
     """
-    Extracts the list of papers from the current search results page.
+    Extracts the list of papers from the current page.
+    RESTRICTION: Only works on Search Results pages.
     
     Args:
         start_index: The rank of the first paper to extract (1-based).
@@ -121,7 +122,7 @@ def open_document(result_index: int) -> str:
 def download_current_paper() -> str:
     """
     Attempts to download the PDF of the paper currently displayed on the page.
-    The page must be an article detail page or have a visible PDF button.
+    RESTRICTION: Only works on Document Detail pages (not search results).
     """
     if not state.page:
         return "Error: Browser not connected. Call launch_browser() first."
@@ -137,6 +138,7 @@ def list_tabs() -> str:
     """
     Lists all open tabs with their titles and URLs.
     Returns a formatted string where the active tab is marked with *.
+    Use this to find valid indices for switching/closing.
     """
     if not state.context:
         return "Error: Browser not connected. Call launch_browser() first."
@@ -155,6 +157,7 @@ def list_tabs() -> str:
 def switch_tab(index: int) -> str:
     """
     Switches focus to a specific tab index.
+    RESTRICTION: Tabs are 0-indexed. Use list_tabs() to check valid indices.
     
     Args:
         index: The 0-based index of the tab to switch to.
@@ -177,6 +180,7 @@ def switch_tab(index: int) -> str:
 def close_tab(index: int) -> str:
     """
     Closes a specific tab index.
+    ADVICE: Close document tabs after downloading or if irrelevant to keep browser clean.
     
     Args:
         index: The 0-based index of the tab to close.
