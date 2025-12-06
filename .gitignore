@@ -49,6 +49,9 @@ ds_api.txt
 # Downloads
 browser_agent/downloads/
 
+# User Chrome Profile (Bot Profile)
+browser_agent/user_chrome_profile/
+
 # vercel
 .vercel
 

@@ -10,52 +10,44 @@ This directory contains scripts for browser automation using Playwright with ste
 
 ## Quick Start
 
-### Option 1: Automated Setup (Recommended)
+### 1. Setup Environment
 ```bash
-# On macOS/Linux:
-chmod +x setup.sh
-./setup.sh
-
 # On Windows (PowerShell):
 .\setup.ps1
 ```
 
-### Option 2: Manual Setup
-```bash
-# Clone the repository
-git clone <repository-url>
-cd WAVE/browser_agent
+### 2. Launch Bot Browser (One-Time Login)
+The agent uses a dedicated Chrome profile to maintain login sessions. You must launch this browser and log in manually once.
 
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# On macOS/Linux:
-source venv/bin/activate
-# On Windows:
-# .\venv\Scripts\Activate.ps1
-
-# Install dependencies
-pip install -r requirements.txt
-playwright install chromium
-
-# Configuration
-cp .env.example .env
-# Edit .env file to add your DeepSeek API key
+```powershell
+# Launch the Bot Browser
+.\launch_debug_chrome.ps1
 ```
+*A Chrome window will open. Log in to Xiaohongshu and IEEE Xplore in this window.*
 
 ### 3. Run Tests
+With the Bot Browser open, run the tests to verify everything works:
+
 ```bash
-# Test browser automation (XHS)
-python tests/xhs_search_test.py
+# Activate virtual environment
+.\venv\Scripts\Activate.ps1
 
-# Test IEEE Xplore PDF download
-python tests/xplore_test/test_pdf_download.py
+# Test 1: Verify Bot Stealth (should show all green)
+python tests/user_bot_test.py
 
-# Test DeepSeek agent (requires API key)
+# Test 2: Verify Xiaohongshu Search & Detail Access
+python tests/user_xhs_test.py
+
+# Test 3: Verify IEEE Xplore PDF Download
+python tests/user_pdf_test.py
+```
+
+### 4. Run Agents
+```bash
+# Run the DeepSeek Autonomous Agent
 python deepseek_agent.py
 
-# Start MCP server
+# Start the MCP Server (for external tools)
 python xhs_mcp_server.py
 ```
 
@@ -89,7 +81,7 @@ cd browser_agent
 # Your prompt should change to show (venv)
 # Now you can use python directly
 python deepseek_agent.py
-python tests/xhs_search_test.py
+python tests/user_xhs_test.py
 python --version
 ```
 
@@ -104,7 +96,7 @@ source venv/bin/activate
 # Your prompt should change to show (venv)
 # Now you can use python directly
 python deepseek_agent.py
-python tests/xhs_search_test.py
+python tests/user_xhs_test.py
 python --version
 ```
 
