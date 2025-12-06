@@ -44,11 +44,18 @@ python tests/user_pdf_test.py
 
 ### 4. Run Agents
 ```bash
-# Run the DeepSeek Autonomous Agent
-python deepseek_agent.py
+# Run the DeepSeek XHS Agent (Xiaohongshu)
+python deepseek_xhs.py
 
-# Start the MCP Server (for external tools)
+# Run the DeepSeek Xplore Agent (IEEE Xplore)
+# This agent is interactive. You can chat with it to search and download papers.
+python deepseek_xplore.py
+
+# Start the MCP Server for XHS
 python xhs_mcp_server.py
+
+# Start the MCP Server for IEEE Xplore
+python xplore_mcp_server.py
 ```
 
 ## Python Environment Setup
@@ -58,12 +65,12 @@ If you see errors like `ModuleNotFoundError: No module named 'playwright'`, it m
 
 ```powershell
 # ❌ WRONG - Running without activating virtual environment
-python .\deepseek_agent.py
+python .\deepseek_xhs.py
 # Error: ModuleNotFoundError: No module named 'playwright'
 
 # ✅ CORRECT - First activate the virtual environment
 .\venv\Scripts\Activate.ps1
-python .\deepseek_agent.py
+python .\deepseek_xhs.py
 # Success: Agent starts normally
 ```
 
@@ -80,7 +87,7 @@ cd browser_agent
 
 # Your prompt should change to show (venv)
 # Now you can use python directly
-python deepseek_agent.py
+python deepseek_xhs.py
 python tests/user_xhs_test.py
 python --version
 ```
@@ -95,7 +102,7 @@ source venv/bin/activate
 
 # Your prompt should change to show (venv)
 # Now you can use python directly
-python deepseek_agent.py
+python deepseek_xhs.py
 python tests/user_xhs_test.py
 python --version
 ```

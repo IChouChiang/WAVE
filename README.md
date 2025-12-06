@@ -26,8 +26,10 @@ WAVE/
 │   ├── browser_utils.py    # Browser initialization
 │   ├── xhs_actions.py      # XHS interaction logic
 │   ├── xplore_actions.py   # IEEE Xplore interaction logic
-│   ├── deepseek_agent.py   # Autonomous AI agent
-│   ├── xhs_mcp_server.py   # MCP server for LLM tools
+│   ├── deepseek_xhs.py     # Autonomous AI agent for XHS
+│   ├── deepseek_xplore.py  # Autonomous AI agent for IEEE Xplore
+│   ├── xhs_mcp_server.py   # MCP server for XHS tools
+│   ├── xplore_mcp_server.py # MCP server for IEEE Xplore tools
 │   ├── tests/              # Test scripts
 │   └── README.md           # Detailed setup guide
 ├── frontend/               # Next.js visual editor
@@ -58,7 +60,7 @@ chmod +x setup.sh
 # IMPORTANT: You must activate the virtual environment first!
 # Windows: .\venv\Scripts\Activate.ps1
 # macOS/Linux: source venv/bin/activate
-python deepseek_agent.py
+python deepseek_xhs.py
 ```
 
 #### Important: Virtual Environment Activation
@@ -68,14 +70,14 @@ Before running any Python scripts, you must activate the virtual environment:
 ```powershell
 cd browser_agent
 .\venv\Scripts\Activate.ps1
-python deepseek_agent.py
+python deepseek_xhs.py
 ```
 
 **macOS/Linux:**
 ```bash
 cd browser_agent
 source venv/bin/activate
-python deepseek_agent.py
+python deepseek_xhs.py
 ```
 
 **Common Error:** If you see `ModuleNotFoundError: No module named 'playwright'`, it means you forgot to activate the virtual environment.
